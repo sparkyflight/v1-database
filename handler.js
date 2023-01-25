@@ -11,7 +11,7 @@ const sequelize = new Sequelize({
 	username: "select",
 	database: "nightmarebot",
 	password: "password",
-	port: 5433,
+	port: 5432,
 	logging: (data) => {
 		logger.info("PostgreSQL", data);
 	},
