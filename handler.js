@@ -29,10 +29,21 @@ for (const fileName of schemaFiles) {
 };
 
 // Users
-class Users {};
+class Users {
+   static async create(data) {
+       const doc = new schemas["users"](data);
+
+       doc.save().then(() => {
+	   logger.info("200", "MongoDB Document Created", {});
+       }).catch((err) => {
+           logger.error("400", `MongoDB Document Create Error`, err);
+       });
+   }
+};
 
 // Tokens
-class Tokens {};
+class Tokens {
+};
 
 // Expose Functions
 module.exports = {
