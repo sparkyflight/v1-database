@@ -2,12 +2,12 @@ const { Schema } = require("mongoose");
 
 const schema = new Schema({
 	UserID: String,
-    CreatedAt: String,
-    Token: String,
-    Method: String
+	CreatedAt: Date,
+	Token: String,
+	Method: String,
 });
 
 module.exports = {
-    name: "token",
+	name: "token",
 	schema: schema,
 };
