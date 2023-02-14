@@ -31,13 +31,36 @@ for (const fileName of schemaFiles) {
 // Users
 class Users {
    static async create(data) {
-       const doc = new schemas["users"](data);
+       const doc = new schemas["user"](data);
 
        doc.save().then(() => {
 	   logger.info("200", "MongoDB Document Created", {});
        }).catch((err) => {
-           logger.error("400", `MongoDB Document Create Error`, err);
+           logger.error("400", `MongoDB Document Creation Error`, err);
        });
+   }
+
+   static async get(data) {
+       const doc = schemas["user"].findOne(data);
+       return doc;
+   }
+
+   static async find(data) {
+       const doc = schemas["user"].find(data);
+       return doc;
+   }
+
+   static async update(id, data) {
+       schemas["user"].updateOne({
+          UserID: id
+       }, data, (err, doc) => {
+          if (err) return err;
+          if (doc) return true;
+       });
+   }
+
+   static async delete(data) {
+      return schemas["user"].deleteOne(data);
    }
 };
 
