@@ -75,11 +75,11 @@ class Users {
 
 // Tokens
 class Tokens {
-	static async create(UserID, Method) {
+	static async create(UserID, Token, Method) {
 		const doc = new schemas["token"]({
 			UserID,
 			CreatedAt: new Date(),
-			Token: crypto.randomUUID(),
+			Token,
 			Method,
 		});
 
