@@ -95,7 +95,7 @@ class Tokens {
 	}
 
 	static async get(token) {
-		const tokenData = schemas["token"].findOne({
+		const tokenData = await schemas["token"].findOne({
 			Token: token,
 		});
 
