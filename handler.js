@@ -31,8 +31,16 @@ for (const fileName of schemaFiles) {
 
 // Users
 class Users {
-	static async create(data) {
-		const doc = new schemas["user"](data);
+	static async create(Username, UserID, Bio, Avatar, CreatedAt, Connections, Notifications) {
+		const doc = new schemas["user"]({
+                    Username,
+                    UserID,
+                    Bio,
+                    Avatar,
+                    CreatedAt,
+                    Connections,
+                    Notifications
+                });
 
 		doc.save()
 			.then(() => {
