@@ -7,6 +7,7 @@ const schema = new Schema({
 	Avatar: String,
 	CreatedAt: Date,
 	Connections: Object,
+        Notifications: Object
 });
 
 module.exports = {
