@@ -4,7 +4,7 @@ const schema = new Schema({
 	UserID: String,
 	Caption: String,
 	Image: String,
-	Plugins: String,
+	Plugins: Object,
 	Type: Number,
 	CreatedAt: Date,
 	PostID: String,
