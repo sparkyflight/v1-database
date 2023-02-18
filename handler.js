@@ -31,16 +31,24 @@ for (const fileName of schemaFiles) {
 
 // Users
 class Users {
-	static async create(Username, UserID, Bio, Avatar, CreatedAt, Connections, Notifications) {
+	static async create(
+		Username,
+		UserID,
+		Bio,
+		Avatar,
+		CreatedAt,
+		Connections,
+		Notifications
+	) {
 		const doc = new schemas["user"]({
-                    Username,
-                    UserID,
-                    Bio,
-                    Avatar,
-                    CreatedAt,
-                    Connections,
-                    Notifications
-                });
+			Username,
+			UserID,
+			Bio,
+			Avatar,
+			CreatedAt,
+			Connections,
+			Notifications,
+		});
 
 		doc.save()
 			.then(() => {
@@ -139,8 +147,92 @@ class Tokens {
 	}
 }
 
+// Posts
+class Posts {
+	static async create(UserID, Caption, Image, Plugins, Type) {
+		const doc = new schemas["post"]({
+			UserID,
+			Caption,
+			Image,
+			Plugins,
+			Type,
+			CreatedAt: new Date(),
+			PostID: crypto.randomUUID(),
+		});
+
+		doc.save()
+			.then(() => {
+				logger.info("200", "MongoDB Document Created", {});
+				return data;
+			})
+			.catch((err) => {
+				logger.error("400", `MongoDB Document Creation Error`, err);
+				return err;
+			});
+	}
+
+	static async get(PostID) {
+		let post = await schemas["post"].findOne({
+			PostID: PostID,
+		});
+
+		if (post) {
+			const user = schemas["user"].findOne({
+				UserID: post.UserID,
+			});
+
+			if (user) {
+				post.user = user;
+
+				return post;
+			} else
+				return {
+					error: "The specified post id is invalid.",
+				};
+		} else
+			return {
+				error: "The specified post id is invalid.",
+			};
+	}
+
+	static async listAllPosts(type) {
+		let posts = [];
+
+		const docs = schemas["post"].find({
+			Type: type,
+		});
+
+		docs.map((i) => {
+			const user = schemas["user"].findOne({
+				UserID: i.UserID,
+			});
+
+			i.user = user;
+
+			posts.push(i);
+		});
+	}
+
+	static async getAllUserPosts(UserID, Type) {
+		const docs = schemas["post"].find({
+			UserID,
+			Type,
+		});
+
+		return docs;
+	}
+
+	static async delete(PostID, UserID) {
+		return schemas["post"].deleteOne({
+			PostID,
+			UserID,
+		});
+	}
+}
+
 // Expose Functions
 module.exports = {
 	Users,
 	Tokens,
+	Posts,
 };
