@@ -198,7 +198,7 @@ class Posts {
 	static async listAllPosts(type) {
 		let posts = [];
 
-		const docs = schemas["post"].find({
+		const docs = await schemas["post"].find({
 			Type: type,
 		});
 
