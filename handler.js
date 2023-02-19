@@ -177,14 +177,17 @@ class Posts {
 		});
 
 		if (post) {
-			const user = schemas["user"].findOne({
+			const user = await schemas["user"].findOne({
 				UserID: post.UserID,
 			});
 
 			if (user) {
-				post.user = user;
+				let data = {
+					user: user,
+					post: post,
+				};
 
-				return post;
+				return data;
 			} else
 				return {
 					error: "The specified post id is invalid.",
@@ -202,15 +205,19 @@ class Posts {
 			Type: type,
 		});
 
-		docs.map((i) => {
-			const user = schemas["user"].findOne({
-				UserID: i.UserID,
+		docs.forEach(async (post) => {
+			const user = await schemas["user"].findOne({
+				UserID: post.UserID,
 			});
 
-			i.user = user;
-
-			posts.push(i);
+			if (user)
+				posts.push({
+					post: post,
+					user: user,
+				});
 		});
+
+		return posts;
 	}
 
 	static async getAllUserPosts(UserID, Type) {
