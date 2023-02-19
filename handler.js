@@ -205,7 +205,7 @@ class Posts {
 			Type: type,
 		});
 
-		docs.forEach(async (post) => {
+		for (const post of docs) {
 			const user = await schemas["user"].findOne({
 				UserID: post.UserID,
 			});
@@ -215,7 +215,7 @@ class Posts {
 					post: post,
 					user: user,
 				});
-		});
+		};
 
 		return posts;
 	}
