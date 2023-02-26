@@ -7,7 +7,8 @@ const schema = new Schema({
         Avatar: String,
         Followers: Object,
         Following: Object,
-        Members: Object
+        Members: Object,
+        CreatedAt: Date
 });
 
 module.exports = {
