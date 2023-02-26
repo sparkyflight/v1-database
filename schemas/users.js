@@ -8,8 +8,8 @@ const schema = new Schema({
 	CreatedAt: Date,
 	Connections: Object,
 	Notifications: Object,
-        Followers: Object,
-        Following: Object
+	Followers: Object,
+	Following: Object,
 });
 
 module.exports = {

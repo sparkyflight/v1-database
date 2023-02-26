@@ -48,17 +48,25 @@ class Users {
 			CreatedAt,
 			Connections,
 			Notifications,
-                        Following: [],
-                        Followers: []
+			Following: [],
+			Followers: [],
 		});
 
 		doc.save()
 			.then(() => {
-				logger.info("200", "MongoDB Document Created", {});
-				return data;
+				return {
+					Username,
+					UserID,
+					Bio,
+					Avatar,
+					CreatedAt,
+					Connections,
+					Notifications,
+					Following: [],
+					Followers: [],
+				};
 			})
 			.catch((err) => {
-				logger.error("400", `MongoDB Document Creation Error`, err);
 				return err;
 			});
 	}
@@ -103,11 +111,9 @@ class Tokens {
 
 		doc.save()
 			.then(() => {
-				logger.info("200", "MongoDB Document Created", {});
 				return data;
 			})
 			.catch((err) => {
-				logger.error("400", `MongoDB Document Creation Error`, err);
 				return err;
 			});
 	}
@@ -160,15 +166,15 @@ class Posts {
 			Type,
 			CreatedAt: new Date(),
 			PostID: crypto.randomUUID(),
+			Likes: 0,
+			Dislikes: 0,
 		});
 
 		doc.save()
 			.then(() => {
-				logger.info("200", "MongoDB Document Created", {});
 				return data;
 			})
 			.catch((err) => {
-				logger.error("400", `MongoDB Document Creation Error`, err);
 				return err;
 			});
 	}
@@ -179,17 +185,17 @@ class Posts {
 		});
 
 		if (post) {
-			const user = await schemas["user"].findOne({
-				UserID: post.UserID,
-			});
+			const user =
+				(await schemas["user"].findOne({
+					UserID: post.UserID,
+				})) ||
+				(await schemas["team"].findOne({
+					UserID: post.UserID,
+				}));
 
-                        const team = await schemas["team"].findOne({
-				UserID: post.UserID,
-			});
-
-			if (user || team) {
+			if (user) {
 				let data = {
-					user: user || team,
+					user: user,
 					post: post,
 				};
 
@@ -212,20 +218,20 @@ class Posts {
 		});
 
 		for (const post of docs) {
-			const user = await schemas["user"].findOne({
-				UserID: post.UserID,
-			});
+			const user =
+				(await schemas["user"].findOne({
+					UserID: post.UserID,
+				})) ||
+				(await schemas["team"].findOne({
+					UserID: post.UserID,
+				}));
 
-                        const team = await schemas["team"].findOne({
-				UserID: post.UserID,
-			});
-
-			if (user || team)
+			if (user)
 				posts.push({
 					post: post,
-					user: user || team,
+					user: user,
 				});
-		};
+		}
 
 		return posts;
 	}
@@ -247,9 +253,82 @@ class Posts {
 	}
 }
 
+// Teams
+class Teams {
+	static async create(Username, UserID, Bio, Avatar, CreatorID) {
+		const doc = new schemas["team"]({
+			Username,
+			UserID,
+			Bio,
+			Avatar,
+			CreatedAt: new Date(),
+			Following: [],
+			Followers: [],
+			Members: [
+				{
+					ID: CreatorID,
+					Roles: ["OWNER"],
+					MemberAddedAt: new Date(),
+				},
+			],
+		});
+
+		doc.save()
+			.then(() => {
+				return {
+					Username,
+					UserID,
+					Bio,
+					Avatar,
+					CreatedAt: new Date(),
+					Following: [],
+					Followers: [],
+					Members: [
+						{
+							ID: CreatorID,
+							Roles: ["OWNER"],
+							MemberAddedAt: new Date(),
+						},
+					],
+				};
+			})
+			.catch((err) => {
+				return err;
+			});
+	}
+
+	static async get(data) {
+		const doc = schemas["team"].findOne(data);
+		return doc;
+	}
+
+	static async find(data) {
+		const doc = schemas["team"].find(data);
+		return doc;
+	}
+
+	static async update(id, data) {
+		schemas["team"].updateOne(
+			{
+				UserID: id,
+			},
+			data,
+			(err, doc) => {
+				if (err) return err;
+				if (doc) return true;
+			}
+		);
+	}
+
+	static async delete(data) {
+		return schemas["team"].deleteOne(data);
+	}
+}
+
 // Expose Functions
 module.exports = {
 	Users,
 	Tokens,
 	Posts,
+	Teams,
 };

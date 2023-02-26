@@ -6,9 +6,9 @@ const schema = new Schema({
 	Bio: String,
 	Avatar: String,
 	CreatedAt: Date,
-        Followers: Object,
-        Following: Object,
-        Members: Object
+	Followers: Object,
+	Following: Object,
+	Members: Object,
 });
 
 module.exports = {
