@@ -183,9 +183,13 @@ class Posts {
 				UserID: post.UserID,
 			});
 
-			if (user) {
+                        const team = await schemas["team"].findOne({
+				UserID: post.UserID,
+			});
+
+			if (user || team) {
 				let data = {
-					user: user,
+					user: user || team,
 					post: post,
 				};
 
@@ -212,10 +216,14 @@ class Posts {
 				UserID: post.UserID,
 			});
 
-			if (user)
+                        const team = await schemas["team"].findOne({
+				UserID: post.UserID,
+			});
+
+			if (user || team)
 				posts.push({
 					post: post,
-					user: user,
+					user: user || team,
 				});
 		};
 
