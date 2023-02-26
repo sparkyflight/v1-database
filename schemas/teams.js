@@ -1,14 +1,14 @@
 const { Schema } = require("mongoose");
 
 const schema = new Schema({
-	ID: String,
-        Name: String,
-        Bio: String,
-        Avatar: String,
+	Username: String,
+	UserID: String,
+	Bio: String,
+	Avatar: String,
+	CreatedAt: Date,
         Followers: Object,
         Following: Object,
-        Members: Object,
-        CreatedAt: Date
+        Members: Object
 });
 
 module.exports = {
