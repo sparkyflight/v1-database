@@ -48,6 +48,8 @@ class Users {
 			CreatedAt,
 			Connections,
 			Notifications,
+                        Following: [],
+                        Followers: []
 		});
 
 		doc.save()
