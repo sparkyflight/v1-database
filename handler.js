@@ -302,11 +302,6 @@ class Teams {
 		return doc;
 	}
 
-	static async find(data) {
-		const doc = schemas["team"].find(data);
-		return doc;
-	}
-
 	static async update(id, data) {
 		schemas["team"].updateOne(
 			{
@@ -323,6 +318,20 @@ class Teams {
 	static async delete(data) {
 		return schemas["team"].deleteOne(data);
 	}
+
+    static async listUsersTeams(userid) {
+        let data = [];
+        const db = await schemas["team"].find();
+
+        for (const team of db) {
+            const i = team.Members.find((i) => i.ID === userid);
+            
+            if (i) data.push(team);
+            else return;
+        };
+
+        return data;
+    }
 }
 
 // Expose Functions
