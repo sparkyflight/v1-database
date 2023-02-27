@@ -323,12 +323,12 @@ class Teams {
         let data = [];
         const db = await schemas["team"].find();
 
-        for (const team of db) {
+        db.forEach((team) => {
             const i = team.Members.find((i) => i.ID === userid);
             
             if (i) data.push(team);
             else return;
-        };
+        });
 
         return data;
     }
