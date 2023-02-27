@@ -222,7 +222,7 @@ class Posts {
 		
                         if (!user) {
                              user = await schemas["team"].findOne({UserID: post.UserID});
-                             if (user) user["team"] = true;
+                             user["team"] = true;
                         }
 
 			if (user)
