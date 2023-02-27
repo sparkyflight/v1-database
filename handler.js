@@ -218,13 +218,12 @@ class Posts {
 		});
 
 		for (const post of docs) {
-			const user =
-				(await schemas["user"].findOne({
-					UserID: post.UserID,
-				})) ||
-				(await schemas["team"].findOne({
-					UserID: post.UserID,
-				}));
+			let user = await schemas["user"].findOne({UserID: post.UserID});
+		
+                        if (!user) {
+                             user = await schemas["team"].findOne({UserID: post.UserID});
+                             if (user) user["team"] = true;
+                        }
 
 			if (user)
 				posts.push({
