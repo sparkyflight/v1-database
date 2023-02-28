@@ -72,7 +72,9 @@ class Users {
 	}
 
 	static async get(data) {
-		const doc = schemas["user"].findOne(data);
+		let doc = schemas["user"].findOne(data);
+		if (doc) doc["team"] = false;
+
 		return doc;
 	}
 
@@ -185,18 +187,20 @@ class Posts {
 		});
 
 		if (post) {
-			const user =
-				(await schemas["user"].findOne({
-					UserID: post.UserID,
-				})) ||
-				(await schemas["team"].findOne({
-					UserID: post.UserID,
-				}));
+			let user = await schemas["user"].findOne({ UserID: post.UserID });
+			let team = false;
 
-			if (user) {
+			if (!user || user.error) {
+				user = await schemas["team"].findOne({ UserID: post.UserID });
+
+				if (user || !user.error) team = true;
+			}
+
+			if (user || !user.error) {
 				let data = {
 					user: user,
 					post: post,
+					team: team,
 				};
 
 				return data;
@@ -218,17 +222,20 @@ class Posts {
 		});
 
 		for (const post of docs) {
-			let user = await schemas["user"].findOne({UserID: post.UserID});
-		
-                        if (!user) {
-                             user = await schemas["team"].findOne({UserID: post.UserID});
-                             user["team"] = true;
-                        }
+			let user = await schemas["user"].findOne({ UserID: post.UserID });
+			let team = false;
 
-			if (user)
+			if (!user || user.error) {
+				user = await schemas["team"].findOne({ UserID: post.UserID });
+
+				if (user || !user.error) team = true;
+			}
+
+			if (user || !user.error)
 				posts.push({
 					post: post,
 					user: user,
+					team: team,
 				});
 		}
 
@@ -297,7 +304,9 @@ class Teams {
 	}
 
 	static async get(data) {
-		const doc = schemas["team"].findOne(data);
+		let doc = schemas["team"].findOne(data);
+		if (doc) doc["team"] = true;
+
 		return doc;
 	}
 
@@ -318,19 +327,19 @@ class Teams {
 		return schemas["team"].deleteOne(data);
 	}
 
-    static async listUsersTeams(userid) {
-        let data = [];
-        const db = await schemas["team"].find();
+	static async listUsersTeams(userid) {
+		let data = [];
+		const db = await schemas["team"].find();
 
-        db.forEach((team) => {
-            const i = team.Members.find((i) => i.ID === userid);
-            
-            if (i) data.push(team);
-            else return;
-        });
+		db.forEach((team) => {
+			const i = team.Members.find((i) => i.ID === userid);
 
-        return data;
-    }
+			if (i) data.push(team);
+			else return;
+		});
+
+		return data;
+	}
 }
 
 // Expose Functions
