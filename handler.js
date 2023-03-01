@@ -72,7 +72,7 @@ class Users {
 	}
 
 	static async get(data) {
-		let doc = schemas["user"].findOne(data);
+		let doc = await schemas["user"].findOne(data);
 		if (doc) doc["team"] = false;
 
 		return doc;
@@ -304,7 +304,7 @@ class Teams {
 	}
 
 	static async get(data) {
-		let doc = schemas["team"].findOne(data);
+		let doc = await schemas["team"].findOne(data);
 		if (doc) doc["team"] = true;
 
 		return doc;
