@@ -304,7 +304,7 @@ class Teams {
 
 	static async get(data) {
 		const doc = await schemas["team"].findOne(data);
-		
+
 		return doc;
 	}
 
