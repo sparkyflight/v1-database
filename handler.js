@@ -240,6 +240,7 @@ class Posts {
                         else return;
 		}
 
+                console.log(posts);
 		return posts;
 	}
 
