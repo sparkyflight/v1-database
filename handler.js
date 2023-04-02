@@ -228,7 +228,7 @@ class Posts {
 				user = await schemas["team"].findOne({ UserID: post.UserID });
 
 				if (user || !user.error) team = true;
-                                else continue;
+                                else return;
 			}
 
 			if (user || !user.error)
@@ -237,6 +237,7 @@ class Posts {
 					user: user,
 					team: team,
 				});
+                        else return;
 		}
 
 		return posts;
