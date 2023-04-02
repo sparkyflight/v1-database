@@ -231,7 +231,7 @@ class Posts {
                                 else user = null;
 			}
 
-			if (user || !user.error)
+			if (user)
 				posts.push({
 					post: post,
 					user: user,
