@@ -224,7 +224,7 @@ class Posts {
 			let user = await schemas["user"].findOne({ UserID: post.UserID });
 			let team = false;
 
-			if (!user || user.error) {
+			if (!user) {
 				user = await schemas["team"].findOne({ UserID: post.UserID });
 
 				if (user || !user.error) team = true;
