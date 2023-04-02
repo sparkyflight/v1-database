@@ -237,10 +237,11 @@ class Posts {
 					user: user,
 					team: team,
 				});
-                        else continue;
+                        else return;
+
+                        console.log(post);
 		}
 
-                console.log(posts);
 		return posts;
 	}
 
