@@ -237,7 +237,7 @@ class Posts {
 					user: user,
 					team: team,
 				});
-                        else return;
+                        else break;
 
                         console.log(posts);
 		}
