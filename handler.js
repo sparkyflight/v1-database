@@ -239,7 +239,7 @@ class Posts {
 				});
                         else return;
 
-                        console.log(post);
+                        console.log(posts);
 		}
 
 		return posts;
