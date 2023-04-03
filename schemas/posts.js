@@ -8,8 +8,8 @@ const schema = new Schema({
 	Type: Number,
 	CreatedAt: Date,
 	PostID: String,
-	Likes: Number,
-	Dislikes: Number,
+	Upvotes: Object,
+	Downvotes: Object,
 });
 
 module.exports = {

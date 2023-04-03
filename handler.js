@@ -3,14 +3,17 @@ const mongoose = require("mongoose");
 const fs = require("fs");
 const crypto = require("node:crypto");
 const logger = require("./logger");
+require("dotenv").config();
 
 // Connect to MongoDB
+const MONGO_URL = `mongodb+srv://select:PPA10082@nightmareproject.5en4i6u.mongodb.net/${
+	process.env.ENV === "production" ? "nightmarebot" : "development"
+}?retryWrites=true&w=majority`;
+
 mongoose.set("strictQuery", true);
 
 this.mongo = mongoose
-	.connect(
-		"mongodb+srv://select:PPA10082@nightmareproject.5en4i6u.mongodb.net/nightmarebot?retryWrites=true&w=majority"
-	)
+	.connect(MONGO_URL)
 	.then(() => {
 		logger.success("Database", "Connected!");
 	})
@@ -31,23 +34,15 @@ for (const fileName of schemaFiles) {
 
 // Users
 class Users {
-	static async create(
-		Username,
-		UserID,
-		Bio,
-		Avatar,
-		CreatedAt,
-		Connections,
-		Notifications
-	) {
+	static async create(Username, UserID, Bio, Avatar, CreatedAt) {
 		const doc = new schemas["user"]({
 			Username,
 			UserID,
 			Bio,
 			Avatar,
 			CreatedAt,
-			Connections,
-			Notifications,
+			Connections: [],
+			Notifications: [],
 			Following: [],
 			Followers: [],
 		});
@@ -60,8 +55,8 @@ class Users {
 					Bio,
 					Avatar,
 					CreatedAt,
-					Connections,
-					Notifications,
+					Connections: [],
+					Notifications: [],
 					Following: [],
 					Followers: [],
 				};
@@ -167,8 +162,8 @@ class Posts {
 			Type,
 			CreatedAt: new Date(),
 			PostID: crypto.randomUUID(),
-			Likes: 0,
-			Dislikes: 0,
+			Upvotes: [],
+			Downvotes: [],
 		});
 
 		doc.save()
@@ -228,7 +223,7 @@ class Posts {
 				user = await schemas["team"].findOne({ UserID: post.UserID });
 
 				if (user || !user.error) team = true;
-                                else user = null;
+				else user = null;
 			}
 
 			if (user)
@@ -237,7 +232,7 @@ class Posts {
 					user: user,
 					team: team,
 				});
-                        else continue;
+			else continue;
 		}
 
 		return posts;
