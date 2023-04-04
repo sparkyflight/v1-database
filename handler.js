@@ -238,6 +238,19 @@ class Posts {
 		return posts;
 	}
 
+       static async update(id, data) {
+		schemas["post"].updateOne(
+			{
+				PostID: id,
+			},
+			data,
+			(err, doc) => {
+				if (err) return err;
+				if (doc) return true;
+			}
+		);
+	}
+
 	static async getAllUserPosts(UserID, Type) {
 		const docs = schemas["post"].find({
 			UserID,
