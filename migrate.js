@@ -2,10 +2,11 @@
 const { exec } = require("child_process");
 const fs = require("node:fs");
 const logger = require("./logger");
+require("dotenv").config();
 
 // MongoURLs
-const production = "mongodb+srv://select:PPA10082@nightmareproject.5en4i6u.mongodb.net/nightmarebot?retryWrites=true&w=majority";
-const development = "mongodb+srv://select:PPA10082@nightmareproject.5en4i6u.mongodb.net/development?retryWrites=true&w=majority";
+const production = `mongodb+srv://select:PPA10082@nightmareproject.5en4i6u.mongodb.net/${process.env.ENV === "production" ? "nightmarebot" : "development"}?retryWrites=true&w=majority`;
+const development = `mongodb+srv://select:PPA10082@nightmareproject.5en4i6u.mongodb.net/${process.env.ENV === "production" ? "development" : "nightmarebot"}?retryWrites=true&w=majority`;
 
 // Schemas
 const schemaFiles = fs
