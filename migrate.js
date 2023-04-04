@@ -1,56 +1,37 @@
 // Packages
-const mongoose = require("mongoose");
-const fs = require("fs");
+const { exec } = require("child_process");
+const fs = require("node:fs");
 const logger = require("./logger");
-require("dotenv").config();
 
-// Connect to MongoDB
-let mongoDEV = null;
-
-mongoose.set("strictQuery", true);
-
-this.mongo = mongoose
-	.connect(
-		"mongodb+srv://select:PPA10082@nightmareproject.5en4i6u.mongodb.net/nightmarebot?retryWrites=true&w=majority"
-	)
-	.then(() => {
-		logger.success("Production Database", "Connected!");
-
-		mongoDEV = mongoose.createConnection(
-			"mongodb+srv://select:PPA10082@nightmareproject.5en4i6u.mongodb.net/development?retryWrites=true&w=majority"
-		);
-	})
-	.catch((err) => {
-		logger.error("Production Database", `Failed to connect\nError: ${err}`);
-	});
-
-logger.success("Development Database", "Connected!");
+// MongoURLs
+const production = "mongodb+srv://select:PPA10082@nightmareproject.5en4i6u.mongodb.net/nightmarebot?retryWrites=true&w=majority";
+const development = "mongodb+srv://select:PPA10082@nightmareproject.5en4i6u.mongodb.net/development?retryWrites=true&w=majority";
 
 // Schemas
 const schemaFiles = fs
 	.readdirSync("./database/schemas")
 	.filter((file) => file.endsWith(".js"));
-const prodSchemas = {};
-const devSchemas = {};
-const data = [];
+const importCommands = [];
+const exportCommands = [];
 
-setTimeout(async() => {
-	// Import production schemas
-	for (const fileName of schemaFiles) {
-		const file = require(`./schemas/${fileName}`);
-		prodSchemas[file.name] = mongoose.model(file.name, file.schema);
-		devSchemas[file.name] = mongoDEV.model(file.name, file.schema);
+for (const fileName of schemaFiles) {
+	const file = require(`./schemas/${fileName}`);
+	
+        importCommands.push({
+           name: file.name,
+           cmd: `mongoimport --url ${development} --collection ${file.name}s --type json --file ${file.name}s.json && rm -rf ${file.name}s.json`
+        });
 
-		data.push({
-			name: file.name,
-            schema: file.schema.tree,
-			data: await prodSchemas[file.name].find(),
-		});
-	}
-}, 1000);
+        exportCommands.push({
+           name: file.name,
+           cmd: `mongoexport --url ${production} --collection ${file.name}s --type json --out ${file.name}s.json`
+        });
+}
 
-setTimeout(async() => {
-	for (const doc of data) {
-		console.log(doc.schema);
-	}
-}, 3000);
+importCommands.forEach((i) => {
+   console.log(i.cmd);
+});
+
+exportCommands.forEach((i) => {
+   console.log(i.cmd);
+});
