@@ -28,10 +28,22 @@ for (const fileName of schemaFiles) {
         });
 }
 
-importCommands.forEach((i) => {
-   console.log(i.cmd);
+exportCommands.forEach((i) => {
+   exec(i.cmd, (error, stdout, stderr) => {
+      if (error) return logger.error("Export Data", error.message);
+      if (stderr) return logger.info("Export Data", stderr);
+
+      return logger.info("Export Data", stdout);
+   });
 });
 
-exportCommands.forEach((i) => {
-   console.log(i.cmd);
-});
+setTimeout(() => {
+  importCommands.forEach((i) => {
+     exec(i.cmd, (error, stdout, stderr) => {
+       if (error) return logger.error("Import Data", error.message);
+       if (stderr) return logger.info("Import Data", stderr);
+
+       return logger.info("Import Data", stdout);
+     });
+  });
+}, 3000);
