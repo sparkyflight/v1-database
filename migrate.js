@@ -5,8 +5,8 @@ const logger = require("./logger");
 require("dotenv").config();
 
 // MongoURLs
-const production = `mongodb+srv://select:PPA10082@nightmareproject.5en4i6u.mongodb.net/${process.env.ENV === "production" ? "nightmarebot" : "development"}?retryWrites=true&w=majority`;
-const development = `mongodb+srv://select:PPA10082@nightmareproject.5en4i6u.mongodb.net/${process.env.ENV === "production" ? "development" : "nightmarebot"}?retryWrites=true&w=majority`;
+const main = `mongodb+srv://select:PPA10082@nightmareproject.5en4i6u.mongodb.net/${process.env.ENV === "production" ? "nightmarebot" : "development"}?retryWrites=true&w=majority`;
+const secondary = `mongodb+srv://select:PPA10082@nightmareproject.5en4i6u.mongodb.net/${process.env.ENV === "production" ? "development" : "nightmarebot"}?retryWrites=true&w=majority`;
 
 // Schemas
 const schemaFiles = fs
@@ -20,12 +20,12 @@ for (const fileName of schemaFiles) {
 	
         importCommands.push({
            name: file.name,
-           cmd: `mongoimport --uri "${development}" --collection ${file.name}s --type json --file ${file.name}s.json && rm -rf ${file.name}s.json`
+           cmd: `mongoimport --uri "${secondary}" --collection ${file.name}s --type json --file ${file.name}s.json && rm -rf ${file.name}s.json`
         });
 
         exportCommands.push({
            name: file.name,
-           cmd: `mongoexport --uri "${production}" --collection ${file.name}s --type json --out ${file.name}s.json`
+           cmd: `mongoexport --uri "${main}" --collection ${file.name}s --type json --out ${file.name}s.json`
         });
 }
 
