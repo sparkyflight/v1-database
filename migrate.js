@@ -19,12 +19,12 @@ for (const fileName of schemaFiles) {
 	
         importCommands.push({
            name: file.name,
-           cmd: `mongoimport --url ${development} --collection ${file.name}s --type json --file ${file.name}s.json && rm -rf ${file.name}s.json`
+           cmd: `mongoimport --uri "${development}" --collection ${file.name}s --type json --file ${file.name}s.json && rm -rf ${file.name}s.json`
         });
 
         exportCommands.push({
            name: file.name,
-           cmd: `mongoexport --url ${production} --collection ${file.name}s --type json --out ${file.name}s.json`
+           cmd: `mongoexport --uri "${production}" --collection ${file.name}s --type json --out ${file.name}s.json`
         });
 }
 
