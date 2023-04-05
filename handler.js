@@ -238,7 +238,7 @@ class Posts {
 		return posts;
 	}
 
-       static async update(id, data) {
+	static async update(id, data) {
 		schemas["post"].updateOne(
 			{
 				PostID: id,
@@ -260,10 +260,9 @@ class Posts {
 		return docs;
 	}
 
-	static async delete(PostID, UserID) {
+	static async delete(PostID) {
 		return schemas["post"].deleteOne({
 			PostID,
-			UserID,
 		});
 	}
 }
