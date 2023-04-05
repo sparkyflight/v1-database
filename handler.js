@@ -216,23 +216,23 @@ class Posts {
 		});
 
 		for (const post of docs) {
-			let user = await schemas["user"].findOne({ UserID: post.UserID });
-			let team = false;
+			let user = {
+                            data: await schemas["user"].findOne({ UserID: post.UserID }),
+                            team: false
+                        };
 
-			if (!user) {
-				user = await schemas["team"].findOne({ UserID: post.UserID });
+			let team = {
+                            data: await schemas["team"].findOne({ UserID: post.UserID }),
+                            team: true
+                        };
 
-				if (user || !user.error) team = true;
-				else user = null;
-			}
-
-			if (user)
+			if (!user.data && !team.data) continue;
+			else
 				posts.push({
 					post: post,
-					user: user,
-					team: team,
+					user: (typeof user.data === "object" ? user.data : team.data),
+					team: (typeof user.data === "object" ? false : true),
 				});
-			else continue;
 		}
 
 		return posts;
