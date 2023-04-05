@@ -217,21 +217,21 @@ class Posts {
 
 		for (const post of docs) {
 			let user = {
-                            data: await schemas["user"].findOne({ UserID: post.UserID }),
-                            team: false
-                        };
+				data: await schemas["user"].findOne({ UserID: post.UserID }),
+				team: false,
+			};
 
 			let team = {
-                            data: await schemas["team"].findOne({ UserID: post.UserID }),
-                            team: true
-                        };
-                        
-                        if (!user.data && !team.data) continue;
+				data: await schemas["team"].findOne({ UserID: post.UserID }),
+				team: true,
+			};
+
+			if (!user.data && !team.data) continue;
 			else
 				posts.push({
 					post: post,
-					user: (user.data === null ? team.data : user.data),
-					team: (user.data === null ? true : false),
+					user: user.data === null ? team.data : user.data,
+					team: user.data === null ? true : false,
 				});
 		}
 
