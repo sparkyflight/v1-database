@@ -225,7 +225,7 @@ class Posts {
                             data: await schemas["team"].findOne({ UserID: post.UserID }),
                             team: true
                         };
-
+                        console.log(typeof user.data); console.log(typeof team.data);
 			if (!user.data && !team.data) continue;
 			else
 				posts.push({
