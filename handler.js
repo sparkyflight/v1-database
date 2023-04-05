@@ -235,7 +235,6 @@ class Posts {
 				});
 		}
 
-                console.log(posts);
 		return posts;
 	}
 
