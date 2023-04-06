@@ -68,7 +68,6 @@ class Users {
 
 	static async get(data) {
 		const doc = await schemas["user"].findOne(data);
-
 		return doc;
 	}
 
@@ -126,7 +125,6 @@ class Tokens {
 
 			if (user) {
 				user["token"] = token;
-
 				return user;
 			} else
 				return {
@@ -168,7 +166,7 @@ class Posts {
 
 		doc.save()
 			.then(() => {
-				return data;
+				return { success: true };
 			})
 			.catch((err) => {
 				return err;
@@ -186,7 +184,6 @@ class Posts {
 
 			if (!user || user.error) {
 				user = await schemas["team"].findOne({ UserID: post.UserID });
-
 				if (user || !user.error) team = true;
 			}
 
