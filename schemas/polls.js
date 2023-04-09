@@ -4,6 +4,7 @@ const schema = new Schema({
 	UserID: String,
 	CreatedAt: Date,
         ExpirationDate: Date,
+        PollID: String,
 	Question: String,
         Description: String,
         Options: Array,
