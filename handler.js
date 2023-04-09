@@ -346,10 +346,57 @@ class Teams {
 	}
 }
 
+// Polls
+class Polls {
+static async create(UserID, ExpirationDate, Question, Description, Options) {
+		const doc = new schemas["poll"]({
+			UserID,
+                        CreatedAt: new Date(),
+                        ExpirationDate,
+                        PollID: crypto.randomUUID(),
+                        Question,
+                        Description,
+                        Options
+		});
+
+		doc.save()
+			.then(() => {
+				return doc;
+			})
+			.catch((err) => {
+				return err;
+			});
+	}
+
+	static async get(PollID) {
+		return schemas["poll"].findOne({
+		    PollID
+		});
+	}
+
+	static async update(PollID, data) {
+		return schemas["poll"].updateOne(
+			{
+				PollID
+			},
+			data,
+			(err, doc) => {
+				if (err) return err;
+				if (doc) return true;
+			}
+		);
+	}
+
+	static async delete(data) {
+		return schemas["poll"].deleteOne(data);
+	}
+}
+
 // Expose Functions
 module.exports = {
 	Users,
 	Tokens,
 	Posts,
 	Teams,
+        Polls
 };
