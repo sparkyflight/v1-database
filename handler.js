@@ -348,15 +348,21 @@ class Teams {
 
 // Polls
 class Polls {
-static async create(UserID, ExpirationDate, Question, Description, Options) {
+	static async create(
+		UserID,
+		ExpirationDate,
+		Question,
+		Description,
+		Options
+	) {
 		const doc = new schemas["poll"]({
 			UserID,
-                        CreatedAt: new Date(),
-                        ExpirationDate,
-                        PollID: crypto.randomUUID(),
-                        Question,
-                        Description,
-                        Options
+			CreatedAt: new Date(),
+			ExpirationDate,
+			PollID: crypto.randomUUID(),
+			Question,
+			Description,
+			Options,
 		});
 
 		doc.save()
@@ -370,14 +376,14 @@ static async create(UserID, ExpirationDate, Question, Description, Options) {
 
 	static async get(PollID) {
 		return schemas["poll"].findOne({
-		    PollID
+			PollID,
 		});
 	}
 
 	static async update(PollID, data) {
 		return schemas["poll"].updateOne(
 			{
-				PollID
+				PollID,
 			},
 			data,
 			(err, doc) => {
@@ -398,5 +404,5 @@ module.exports = {
 	Tokens,
 	Posts,
 	Teams,
-        Polls
+	Polls,
 };
