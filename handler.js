@@ -350,6 +350,7 @@ class Teams {
 class Polls {
 	static async create(
 		UserID,
+		PollID,
 		ExpirationDate,
 		Question,
 		Description,
@@ -359,7 +360,7 @@ class Polls {
 			UserID,
 			CreatedAt: new Date(),
 			ExpirationDate,
-			PollID: crypto.randomUUID(),
+			PollID,
 			Question,
 			Description,
 			Options,
