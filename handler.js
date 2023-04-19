@@ -12,7 +12,7 @@ const MONGO_URL = `mongodb+srv://select:PPA10082@nightmareproject.5en4i6u.mongod
 
 mongoose.set("strictQuery", true);
 
-this.mongo = mongoose
+mongoose
 	.connect(MONGO_URL)
 	.then(() => {
 		logger.success("Database", "Connected!");
@@ -83,12 +83,8 @@ class Users {
 			{
 				UserID: id,
 			},
-			data,
-			(err, doc) => {
-				if (err) return err;
-				if (doc) return true;
-			}
-		);
+			data
+		).then((i) => { return i; }).catch((e) => { return e; });
 	}
 
 	static async delete(data) {
