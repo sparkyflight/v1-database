@@ -45,6 +45,7 @@ class Users {
 			Notifications: [],
 			Following: [],
 			Followers: [],
+            StaffPerms: []
 		});
 
 		doc.save()
@@ -59,6 +60,7 @@ class Users {
 					Notifications: [],
 					Following: [],
 					Followers: [],
+                    StaffPerms: []
 				};
 			})
 			.catch((err) => {
