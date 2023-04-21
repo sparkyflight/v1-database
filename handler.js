@@ -45,7 +45,7 @@ class Users {
 			Notifications: [],
 			Following: [],
 			Followers: [],
-            StaffPerms: []
+                        StaffPerms: []
 		});
 
 		doc.save()
@@ -60,7 +60,7 @@ class Users {
 					Notifications: [],
 					Following: [],
 					Followers: [],
-                    StaffPerms: []
+                                        StaffPerms: []
 				};
 			})
 			.catch((err) => {
@@ -260,6 +260,40 @@ class Posts {
 			PostID,
 		});
 	}
+
+        static async upvote(PostID, UserID) {
+                schemas["post"].updateOne(
+			{
+				PostID
+			},
+			{
+                           $push: {
+                             "vpvotes": UserID
+                           }
+                        },
+			(err, doc) => {
+				if (err) return err;
+				if (doc) return true;
+			}
+		);
+        }
+
+        static async downvote(PostID, UserID) {
+                schemas["post"].updateOne(
+			{
+				PostID
+			},
+			{
+                           $push: {
+                             "downvotes": UserID
+                           }
+                        },
+			(err, doc) => {
+				if (err) return err;
+				if (doc) return true;
+			}
+		);
+        }
 }
 
 // Teams
