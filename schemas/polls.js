@@ -2,17 +2,15 @@ const { Schema } = require("mongoose");
 
 const schema = new Schema({
 	UserID: String,
-	Caption: String,
-	Image: String,
-	Plugins: Object,
-	Type: Number,
 	CreatedAt: Date,
-	PostID: String,
-	Upvotes: Object,
-	Downvotes: Object,
+	ExpirationDate: Date,
+	PollID: String,
+	Question: String,
+	Description: String,
+	Options: Array,
 });
 
 module.exports = {
-	name: "post",
+	name: "poll",
 	schema: schema,
 };

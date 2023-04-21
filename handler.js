@@ -3,14 +3,17 @@ const mongoose = require("mongoose");
 const fs = require("fs");
 const crypto = require("node:crypto");
 const logger = require("./logger");
+require("dotenv").config();
 
 // Connect to MongoDB
+const MONGO_URL = `mongodb+srv://select:PPA10082@nightmareproject.5en4i6u.mongodb.net/${
+	process.env.ENV === "production" ? "nightmarebot" : "development"
+}?retryWrites=true&w=majority`;
+
 mongoose.set("strictQuery", true);
 
-this.mongo = mongoose
-	.connect(
-		"mongodb+srv://select:PPA10082@nightmareproject.5en4i6u.mongodb.net/nightmarebot?retryWrites=true&w=majority"
-	)
+mongoose
+	.connect(MONGO_URL)
 	.then(() => {
 		logger.success("Database", "Connected!");
 	})
@@ -31,25 +34,18 @@ for (const fileName of schemaFiles) {
 
 // Users
 class Users {
-	static async create(
-		Username,
-		UserID,
-		Bio,
-		Avatar,
-		CreatedAt,
-		Connections,
-		Notifications
-	) {
+	static async create(Username, UserID, Bio, Avatar, CreatedAt) {
 		const doc = new schemas["user"]({
 			Username,
 			UserID,
 			Bio,
 			Avatar,
 			CreatedAt,
-			Connections,
-			Notifications,
+			Connections: [],
+			Notifications: [],
 			Following: [],
 			Followers: [],
+			StaffPerms: [],
 		});
 
 		doc.save()
@@ -60,10 +56,11 @@ class Users {
 					Bio,
 					Avatar,
 					CreatedAt,
-					Connections,
-					Notifications,
+					Connections: [],
+					Notifications: [],
 					Following: [],
 					Followers: [],
+					StaffPerms: [],
 				};
 			})
 			.catch((err) => {
@@ -73,7 +70,6 @@ class Users {
 
 	static async get(data) {
 		const doc = await schemas["user"].findOne(data);
-
 		return doc;
 	}
 
@@ -83,16 +79,19 @@ class Users {
 	}
 
 	static async update(id, data) {
-		schemas["user"].updateOne(
-			{
-				UserID: id,
-			},
-			data,
-			(err, doc) => {
-				if (err) return err;
-				if (doc) return true;
-			}
-		);
+		schemas["user"]
+			.updateOne(
+				{
+					UserID: id,
+				},
+				data
+			)
+			.then((i) => {
+				return i;
+			})
+			.catch((e) => {
+				return e;
+			});
 	}
 
 	static async delete(data) {
@@ -131,7 +130,6 @@ class Tokens {
 
 			if (user) {
 				user["token"] = token;
-
 				return user;
 			} else
 				return {
@@ -167,13 +165,13 @@ class Posts {
 			Type,
 			CreatedAt: new Date(),
 			PostID: crypto.randomUUID(),
-			Likes: 0,
-			Dislikes: 0,
+			Upvotes: [],
+			Downvotes: [],
 		});
 
 		doc.save()
 			.then(() => {
-				return data;
+				return { success: true };
 			})
 			.catch((err) => {
 				return err;
@@ -191,7 +189,6 @@ class Posts {
 
 			if (!user || user.error) {
 				user = await schemas["team"].findOne({ UserID: post.UserID });
-
 				if (user || !user.error) team = true;
 			}
 
@@ -221,24 +218,42 @@ class Posts {
 		});
 
 		for (const post of docs) {
-			let user = await schemas["user"].findOne({ UserID: post.UserID });
-			let team = false;
+			let user = {
+				data: await schemas["user"].findOne({ UserID: post.UserID }),
+				team: false,
+			};
 
-			if (!user || user.error) {
-				user = await schemas["team"].findOne({ UserID: post.UserID });
+			let team = {
+				data: await schemas["team"].findOne({ UserID: post.UserID }),
+				team: true,
+			};
 
-				if (user || !user.error) team = true;
-			}
-
-			if (user || !user.error)
+			if (!user.data && !team.data) continue;
+			else
 				posts.push({
 					post: post,
-					user: user,
-					team: team,
+					user: user.data === null ? team.data : user.data,
+					team: user.data === null ? true : false,
 				});
 		}
 
 		return posts;
+	}
+
+	static async update(id, data) {
+		return await schemas["post"]
+			.updateOne(
+				{
+					PostID: id,
+				},
+				data
+			)
+			.then((i) => {
+				return i;
+			})
+			.catch((err) => {
+				return err;
+			});
 	}
 
 	static async getAllUserPosts(UserID, Type) {
@@ -250,11 +265,50 @@ class Posts {
 		return docs;
 	}
 
-	static async delete(PostID, UserID) {
+	static async delete(PostID) {
 		return schemas["post"].deleteOne({
 			PostID,
-			UserID,
 		});
+	}
+
+	static async upvote(PostID, UserID) {
+		return schemas["post"]
+			.updateOne(
+				{
+					PostID,
+				},
+				{
+					$push: {
+						Upvotes: UserID,
+					},
+				}
+			)
+			.then((i) => {
+				return i;
+			})
+			.catch((err) => {
+				return err;
+			});
+	}
+
+	static async downvote(PostID, UserID) {
+		schemas["post"]
+			.updateOne(
+				{
+					PostID,
+				},
+				{
+					$push: {
+						Downvotes: UserID,
+					},
+				}
+			)
+			.then((i) => {
+				return i;
+			})
+			.catch((err) => {
+				return err;
+			});
 	}
 }
 
@@ -309,16 +363,19 @@ class Teams {
 	}
 
 	static async update(id, data) {
-		schemas["team"].updateOne(
-			{
-				UserID: id,
-			},
-			data,
-			(err, doc) => {
-				if (err) return err;
-				if (doc) return true;
-			}
-		);
+		schemas["team"]
+			.updateOne(
+				{
+					UserID: id,
+				},
+				data
+			)
+			.then((i) => {
+				return i;
+			})
+			.catch((err) => {
+				return err;
+			});
 	}
 
 	static async delete(data) {
@@ -340,10 +397,67 @@ class Teams {
 	}
 }
 
+// Polls
+class Polls {
+	static async create(
+		UserID,
+		PollID,
+		ExpirationDate,
+		Question,
+		Description,
+		Options
+	) {
+		const doc = new schemas["poll"]({
+			UserID,
+			CreatedAt: new Date(),
+			ExpirationDate,
+			PollID,
+			Question,
+			Description,
+			Options,
+		});
+
+		doc.save()
+			.then(() => {
+				return doc;
+			})
+			.catch((err) => {
+				return err;
+			});
+	}
+
+	static async get(PollID) {
+		return schemas["poll"].findOne({
+			PollID,
+		});
+	}
+
+	static async update(PollID, data) {
+		return schemas["poll"]
+			.updateOne(
+				{
+					PollID,
+				},
+				data
+			)
+			.then((i) => {
+				return i;
+			})
+			.catch((err) => {
+				return err;
+			});
+	}
+
+	static async delete(data) {
+		return schemas["poll"].deleteOne(data);
+	}
+}
+
 // Expose Functions
 module.exports = {
 	Users,
 	Tokens,
 	Posts,
 	Teams,
+	Polls,
 };
