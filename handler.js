@@ -268,7 +268,7 @@ class Posts {
 			},
 			{
                            $push: {
-                             "vpvotes": UserID
+                             "Upvotes": UserID
                            }
                         },
 			(err, doc) => {
@@ -285,7 +285,7 @@ class Posts {
 			},
 			{
                            $push: {
-                             "downvotes": UserID
+                             "Downvotes": UserID
                            }
                         },
 			(err, doc) => {
