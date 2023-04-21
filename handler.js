@@ -45,7 +45,7 @@ class Users {
 			Notifications: [],
 			Following: [],
 			Followers: [],
-                        StaffPerms: []
+			StaffPerms: [],
 		});
 
 		doc.save()
@@ -60,7 +60,7 @@ class Users {
 					Notifications: [],
 					Following: [],
 					Followers: [],
-                                        StaffPerms: []
+					StaffPerms: [],
 				};
 			})
 			.catch((err) => {
@@ -79,12 +79,19 @@ class Users {
 	}
 
 	static async update(id, data) {
-		schemas["user"].updateOne(
-			{
-				UserID: id,
-			},
-			data
-		).then((i) => { return i; }).catch((e) => { return e; });
+		schemas["user"]
+			.updateOne(
+				{
+					UserID: id,
+				},
+				data
+			)
+			.then((i) => {
+				return i;
+			})
+			.catch((e) => {
+				return e;
+			});
 	}
 
 	static async delete(data) {
@@ -234,16 +241,19 @@ class Posts {
 	}
 
 	static async update(id, data) {
-		schemas["post"].updateOne(
-			{
-				PostID: id,
-			},
-			data,
-			(err, doc) => {
-				if (err) return err;
-				if (doc) return true;
-			}
-		);
+		return await schemas["post"]
+			.updateOne(
+				{
+					PostID: id,
+				},
+				data
+			)
+			.then((i) => {
+				return i;
+			})
+			.catch((err) => {
+				return err;
+			});
 	}
 
 	static async getAllUserPosts(UserID, Type) {
@@ -261,39 +271,45 @@ class Posts {
 		});
 	}
 
-        static async upvote(PostID, UserID) {
-                schemas["post"].updateOne(
-			{
-				PostID
-			},
-			{
-                           $push: {
-                             "Upvotes": UserID
-                           }
-                        },
-			(err, doc) => {
-				if (err) return err;
-				if (doc) return true;
-			}
-		);
-        }
+	static async upvote(PostID, UserID) {
+		return schemas["post"]
+			.updateOne(
+				{
+					PostID,
+				},
+				{
+					$push: {
+						Upvotes: UserID,
+					},
+				}
+			)
+			.then((i) => {
+				return i;
+			})
+			.catch((err) => {
+				return err;
+			});
+	}
 
-        static async downvote(PostID, UserID) {
-                schemas["post"].updateOne(
-			{
-				PostID
-			},
-			{
-                           $push: {
-                             "Downvotes": UserID
-                           }
-                        },
-			(err, doc) => {
-				if (err) return err;
-				if (doc) return true;
-			}
-		);
-        }
+	static async downvote(PostID, UserID) {
+		schemas["post"]
+			.updateOne(
+				{
+					PostID,
+				},
+				{
+					$push: {
+						Downvotes: UserID,
+					},
+				}
+			)
+			.then((i) => {
+				return i;
+			})
+			.catch((err) => {
+				return err;
+			});
+	}
 }
 
 // Teams
@@ -347,16 +363,19 @@ class Teams {
 	}
 
 	static async update(id, data) {
-		schemas["team"].updateOne(
-			{
-				UserID: id,
-			},
-			data,
-			(err, doc) => {
-				if (err) return err;
-				if (doc) return true;
-			}
-		);
+		schemas["team"]
+			.updateOne(
+				{
+					UserID: id,
+				},
+				data
+			)
+			.then((i) => {
+				return i;
+			})
+			.catch((err) => {
+				return err;
+			});
 	}
 
 	static async delete(data) {
@@ -414,16 +433,19 @@ class Polls {
 	}
 
 	static async update(PollID, data) {
-		return schemas["poll"].updateOne(
-			{
-				PollID,
-			},
-			data,
-			(err, doc) => {
-				if (err) return err;
-				if (doc) return true;
-			}
-		);
+		return schemas["poll"]
+			.updateOne(
+				{
+					PollID,
+				},
+				data
+			)
+			.then((i) => {
+				return i;
+			})
+			.catch((err) => {
+				return err;
+			});
 	}
 
 	static async delete(data) {
