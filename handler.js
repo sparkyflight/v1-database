@@ -45,6 +45,7 @@ class Users {
 			Notifications: [],
 			Following: [],
 			Followers: [],
+                        Badges: [],
 			StaffPerms: [],
 		});
 
@@ -60,6 +61,7 @@ class Users {
 					Notifications: [],
 					Following: [],
 					Followers: [],
+                                        Badges: [],
 					StaffPerms: [],
 				};
 			})
