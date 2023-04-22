@@ -10,6 +10,7 @@ const schema = new Schema({
 	Notifications: Object,
 	Followers: Object,
 	Following: Object,
+        Badges: Object,
 	StaffPerms: Object,
 });
 
