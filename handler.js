@@ -34,14 +34,19 @@ for (const fileName of schemaFiles) {
 
 // Users
 class Users {
-	static async create(Username, UserID, Bio, Avatar, CreatedAt) {
+	static async create(Username, UserID, Bio, Avatar, CreatedAt, Service) {
 		const doc = new schemas["user"]({
 			Username,
 			UserID,
 			Bio,
 			Avatar,
 			CreatedAt,
-			Connections: [],
+			Connections: [{
+                           service: Service,
+                           id: UserID,
+                           accessToken: null,
+                           refreshToken: null
+                        }],
 			Notifications: [],
 			Following: [],
 			Followers: [],
@@ -57,7 +62,12 @@ class Users {
 					Bio,
 					Avatar,
 					CreatedAt,
-					Connections: [],
+					Connections: [{
+                           service: Service,
+                           id: UserID,
+                           accessToken: null,
+                           refreshToken: null
+                        }],
 					Notifications: [],
 					Following: [],
 					Followers: [],
