@@ -100,11 +100,11 @@ class Users {
 		return schemas["user"].deleteOne(data);
 	}
 
-        static async follow(UserID, Target) {
-		return schemas["user"]
+	static async follow(UserID, Target) {
+		schemas["user"]
 			.updateOne(
 				{
-					UserID: Target
+					UserID: Target,
 				},
 				{
 					$push: {
@@ -118,6 +118,26 @@ class Users {
 			.catch((err) => {
 				return err;
 			});
+
+		schemas["user"]
+			.updateOne(
+				{
+					UserID: UserID,
+				},
+				{
+					$push: {
+						Following: Target,
+					},
+				}
+			)
+			.then((i) => {
+				return i;
+			})
+			.catch((err) => {
+				return err;
+			});
+
+		return true;
 	}
 
 	static async unfollow(UserID, Target) {
@@ -138,6 +158,26 @@ class Users {
 			.catch((err) => {
 				return err;
 			});
+
+		schemas["user"]
+			.updateOne(
+				{
+					UserID: UserID,
+				},
+				{
+					$pull: {
+						Following: Target,
+					},
+				}
+			)
+			.then((i) => {
+				return i;
+			})
+			.catch((err) => {
+				return err;
+			});
+
+		return true;
 	}
 }
 
