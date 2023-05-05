@@ -99,6 +99,46 @@ class Users {
 	static async delete(data) {
 		return schemas["user"].deleteOne(data);
 	}
+
+        static async follow(UserID, Target) {
+		return schemas["user"]
+			.updateOne(
+				{
+					UserID: Target
+				},
+				{
+					$push: {
+						Followers: UserID,
+					},
+				}
+			)
+			.then((i) => {
+				return i;
+			})
+			.catch((err) => {
+				return err;
+			});
+	}
+
+	static async unfollow(UserID, Target) {
+		schemas["user"]
+			.updateOne(
+				{
+					UserID: Target,
+				},
+				{
+					$pull: {
+						Followers: UserID,
+					},
+				}
+			)
+			.then((i) => {
+				return i;
+			})
+			.catch((err) => {
+				return err;
+			});
+	}
 }
 
 // Tokens
