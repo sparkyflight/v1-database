@@ -439,7 +439,19 @@ class Teams {
 	}
 
 	static async get(data) {
-		const doc = await schemas["team"].findOne(data);
+		let doc = await schemas["team"].findOne(data);
+
+  if (doc) doc.Members.forEach(async (p) => {
+     doc.Members = [];
+
+     let member = await schemas["user"].findOne({ UserID: p.ID });
+
+     if (member) {
+       member.Roles = p.Roles;
+
+       doc.Members.push(member);
+     }
+  });
 
 		return doc;
 	}
