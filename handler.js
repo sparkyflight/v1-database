@@ -443,16 +443,14 @@ class Teams {
 
   if (doc) {
    doc.Members.forEach(async (p) => {
-     doc.Members = [];
+     let members = [];
 
      let member = await schemas["user"].findOne({ UserID: p.ID });
 
      if (member) {
        member.Roles = p.Roles;
-
-       doc.Members.push(member);
-       console.log(p);
-       console.log(member);
+       members.push(member);
+       doc.Members = members;
      }
    });
   }
