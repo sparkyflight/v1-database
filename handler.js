@@ -440,17 +440,18 @@ class Teams {
 
 	static async get(data) {
 		let doc = await schemas["team"].findOne(data);
+  doc["RenderedMembers"] = [];
 
   if (doc) {
    doc.Members.forEach(async (p) => {
-     let members = [];
+     let Members = [];
 
-     let member = await schemas["user"].findOne({ UserID: p.ID });
+     let MemberData = await schemas["user"].findOne({ UserID: p.ID });
 
-     if (member) {
-       member.Roles = p.Roles;
-       members.push(member);
-       doc.Members = members;
+     if (MemberData) {
+       MemberData.Roles = p.Roles;
+       Members.push(MemberData);
+       doc.RenderedMembers = Members;
      }
    });
   }
