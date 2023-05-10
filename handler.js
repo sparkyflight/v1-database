@@ -451,6 +451,7 @@ class Teams {
        member.Roles = p.Roles;
 
        doc.Members.push(member);
+       console.log(member);
      }
    });
   }
