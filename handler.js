@@ -374,7 +374,7 @@ class Posts {
 	}
 
 	static async downvote(PostID, UserID) {
-		schemas["post"]
+		return schemas["post"]
 			.updateOne(
 				{
 					PostID,
