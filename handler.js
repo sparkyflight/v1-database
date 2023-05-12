@@ -292,9 +292,35 @@ class Posts {
 			};
 	}
 
- static async find(data) { 
-    const doc = schemas["post"].find(data); 
-    return doc; 
+ static async find(data, type) { 
+                    let posts = []; 
+  
+                 const docs = await schemas["post"].find({ 
+                         data: data,
+                         type: type
+                 }); 
+  
+                 for (const post of docs) { 
+                         let user = { 
+                                 data: await schemas["user"].findOne({ UserID: post.UserID }), 
+                                 team: false, 
+                         }; 
+  
+                         let team = { 
+                                 data: await schemas["team"].findOne({ UserID: post.UserID }), 
+                                 team: true, 
+                         }; 
+  
+                         if (!user.data && !team.data) continue; 
+                         else 
+                                 posts.push({ 
+                                         post: post, 
+                                         user: user.data === null ? team.data : user.data, 
+                                         team: user.data === null ? true : false, 
+                                 }); 
+                 } 
+  
+                 return posts;
  }
 
 	static async listAllPosts(type) {
