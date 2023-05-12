@@ -292,6 +292,11 @@ class Posts {
 			};
 	}
 
+ static async find(data) { 
+    const doc = schemas["post"].find(data); 
+    return doc; 
+ }
+
 	static async listAllPosts(type) {
 		let posts = [];
 
