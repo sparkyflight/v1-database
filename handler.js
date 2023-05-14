@@ -424,6 +424,31 @@ class Posts {
 				return err;
 			});
 	}
+
+ static async comment(PostID, UserID, Caption) {
+  return schemas["post"]
+   .updateOne(
+      {
+        PostID,
+      },
+      {
+        $push: {
+          Comments: {
+             UserID: UserID,
+             Caption: Caption,
+             Upvotes: [],
+             Downvotes: []
+          }
+        }
+      }
+   )
+   .then((i) => {
+      return i;
+   })
+   .catch((i) => {
+      return i;
+   });
+ }
 }
 
 // Teams
