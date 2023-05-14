@@ -249,6 +249,7 @@ class Posts {
 			PostID: crypto.randomUUID(),
 			Upvotes: [],
 			Downvotes: [],
+   Comments: []
 		});
 
 		doc.save()
