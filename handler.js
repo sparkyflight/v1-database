@@ -440,7 +440,7 @@ class Posts {
 	static async getAllUserPosts(UserID, Type) {
 		let posts = [];
 
-		const docs = schemas["post"].find({
+		const docs = await schemas["post"].find({
 			UserID,
 			Type,
 		});
