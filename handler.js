@@ -77,9 +77,12 @@ class Users {
 
 	static async find(data) {
 		let doc = await schemas["user"].find(data);
-		if (doc) doc["Connections"] = [];
 
-		return doc;
+		return doc.map((p) => {
+			let d = p;
+			d["Connections"] = [];
+			return d;
+		});
 	}
 
 	static async update(id, data) {
