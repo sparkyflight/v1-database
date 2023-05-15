@@ -294,6 +294,7 @@ class Posts {
 	}
 
 	static async find(data, type) {
+  let Comments = [];
 		let posts = [];
 
 		const docs = await schemas["post"].find({
@@ -312,13 +313,32 @@ class Posts {
 				team: true,
 			};
 
+                           for (const comment of post.Comments) { 
+                                 let user = await schemas["user"].findOne({ 
+                                         UserID: comment.UserID, 
+                                 }); 
+  
+                                 if (user) { 
+                                         user.Connections = []; 
+                                         Comments.push({ 
+                                                 comment: comment, 
+                                                 user: user, 
+                                         }); 
+                                 } else continue; 
+                         }
+
 			if (!user.data && !team.data) continue;
-			else
+			else {
+   post.Comments = Comments;
+
+   (user.data === null ? team.data : user.data).Connections = [];
+
 				posts.push({
 					post: post,
 					user: user.data === null ? team.data : user.data,
 					team: user.data === null ? true : false,
 				});
+   }
 		}
 
 		return posts;
