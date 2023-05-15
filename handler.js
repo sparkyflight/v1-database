@@ -342,13 +342,15 @@ class Posts {
 				team: true,
 			};
 
-            post.Comments = post.Comments.map(async (p) => {
+            post.Comments = [];
+            
+            post.Comments.map(async (p) => {
                 let user = await schemas["user"].findOne({ UserID: p.UserID });
 
-                if (user) return {
+                if (user) post.Comments.push({
                     comment: p,
                     user: user
-                };
+                });
                 else return;
             });
 
