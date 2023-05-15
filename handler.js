@@ -357,6 +357,8 @@ class Posts {
 			if (!user.data && !team.data) continue;
 			else {
                 post.Comments = Comments;
+
+                delete (user.data === null ? team.data : user.data).Connections;
                 
 				posts.push({
 					post: post,
