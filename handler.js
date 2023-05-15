@@ -271,6 +271,8 @@ class Posts {
 			PostID: PostID,
 		});
 
+		let Comments = [];
+
 		if (post) {
 			let user = await schemas["user"].findOne({ UserID: post.UserID });
 			let team = false;
@@ -282,6 +284,22 @@ class Posts {
 
 			if (user || !user.error) {
 				user.Connections = [];
+
+				for (const comment of post.Comments) {
+					let user = await schemas["user"].findOne({
+						UserID: comment.UserID,
+					});
+
+					if (user) {
+						user.Connections = [];
+						Comments.push({
+							comment: comment,
+							user: user,
+						});
+					} else continue;
+				}
+
+				post.Comments = Comments;
 
 				let data = {
 					user: user,
@@ -420,12 +438,55 @@ class Posts {
 	}
 
 	static async getAllUserPosts(UserID, Type) {
+		let posts = [];
+
 		const docs = schemas["post"].find({
 			UserID,
 			Type,
 		});
 
-		return docs;
+		for (let post of docs) {
+			let Comments = [];
+
+			let user = {
+				data: await schemas["user"].findOne({ UserID: post.UserID }),
+				team: false,
+			};
+
+			let team = {
+				data: await schemas["team"].findOne({ UserID: post.UserID }),
+				team: true,
+			};
+
+			for (const comment of post.Comments) {
+				let user = await schemas["user"].findOne({
+					UserID: comment.UserID,
+				});
+
+				if (user) {
+					user.Connections = [];
+					Comments.push({
+						comment: comment,
+						user: user,
+					});
+				} else continue;
+			}
+
+			if (!user.data && !team.data) continue;
+			else {
+				post.Comments = Comments;
+
+				(user.data === null ? team.data : user.data).Connections = [];
+
+				posts.push({
+					post: post,
+					user: user.data === null ? team.data : user.data,
+					team: user.data === null ? true : false,
+				});
+			}
+		}
+
+		return posts;
 	}
 
 	static async delete(PostID) {
