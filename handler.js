@@ -476,13 +476,7 @@ class Posts {
 			else {
 				post.Comments = Comments;
 
-				(user.data === null ? team.data : user.data).Connections = [];
-
-				posts.push({
-					post: post,
-					user: user.data === null ? team.data : user.data,
-					team: user.data === null ? true : false,
-				});
+				posts.push(post);
 			}
 		}
 
