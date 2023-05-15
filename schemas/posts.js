@@ -10,7 +10,7 @@ const schema = new Schema({
 	PostID: String,
 	Upvotes: Object,
 	Downvotes: Object,
- Comments: Object
+	Comments: Object,
 });
 
 module.exports = {

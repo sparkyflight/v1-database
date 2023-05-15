@@ -249,7 +249,7 @@ class Posts {
 			PostID: crypto.randomUUID(),
 			Upvotes: [],
 			Downvotes: [],
-   Comments: []
+			Comments: [],
 		});
 
 		doc.save()
@@ -293,42 +293,12 @@ class Posts {
 			};
 	}
 
- static async find(data, type) { 
-                    let posts = []; 
-  
-                 const docs = await schemas["post"].find({ 
-                         data: data,
-                         type: type
-                 }); 
-  
-                 for (const post of docs) { 
-                         let user = { 
-                                 data: await schemas["user"].findOne({ UserID: post.UserID }), 
-                                 team: false, 
-                         }; 
-  
-                         let team = { 
-                                 data: await schemas["team"].findOne({ UserID: post.UserID }), 
-                                 team: true, 
-                         }; 
-  
-                         if (!user.data && !team.data) continue; 
-                         else 
-                                 posts.push({ 
-                                         post: post, 
-                                         user: user.data === null ? team.data : user.data, 
-                                         team: user.data === null ? true : false, 
-                                 }); 
-                 } 
-  
-                 return posts;
- }
-
-	static async listAllPosts(type) {
+	static async find(data, type) {
 		let posts = [];
 
 		const docs = await schemas["post"].find({
-			Type: type,
+			data: data,
+			type: type,
 		});
 
 		for (const post of docs) {
@@ -341,6 +311,43 @@ class Posts {
 				data: await schemas["team"].findOne({ UserID: post.UserID }),
 				team: true,
 			};
+
+			if (!user.data && !team.data) continue;
+			else
+				posts.push({
+					post: post,
+					user: user.data === null ? team.data : user.data,
+					team: user.data === null ? true : false,
+				});
+		}
+
+		return posts;
+	}
+
+	static async listAllPosts(type) {
+		let posts = [];
+
+		const docs = await schemas["post"].find({
+			Type: type,
+		});
+
+		for (let post of docs) {
+			let user = {
+				data: await schemas["user"].findOne({ UserID: post.UserID }),
+				team: false,
+			};
+
+			let team = {
+				data: await schemas["team"].findOne({ UserID: post.UserID }),
+				team: true,
+			};
+
+            post.Comments = post.Comments.map(async (p) => {
+                let user = await schemas["user"].findOne({ UserID: p.UserID });
+
+                if (user || !user.error) return user;
+                else return;
+            });
 
 			if (!user.data && !team.data) continue;
 			else
@@ -425,30 +432,30 @@ class Posts {
 			});
 	}
 
- static async comment(PostID, UserID, Caption) {
-  return schemas["post"]
-   .updateOne(
-      {
-        PostID,
-      },
-      {
-        $push: {
-          Comments: {
-             UserID: UserID,
-             Caption: Caption,
-             Upvotes: [],
-             Downvotes: []
-          }
-        }
-      }
-   )
-   .then((i) => {
-      return i;
-   })
-   .catch((i) => {
-      return i;
-   });
- }
+	static async comment(PostID, UserID, Caption) {
+		return schemas["post"]
+			.updateOne(
+				{
+					PostID,
+				},
+				{
+					$push: {
+						Comments: {
+							UserID: UserID,
+							Caption: Caption,
+							Upvotes: [],
+							Downvotes: [],
+						},
+					},
+				}
+			)
+			.then((i) => {
+				return i;
+			})
+			.catch((i) => {
+				return i;
+			});
+	}
 }
 
 // Teams
@@ -498,7 +505,7 @@ class Teams {
 	static async get(data) {
 		let doc = await schemas["team"].findOne(data);
 
-  return doc;
+		return doc;
 	}
 
 	static async update(id, data) {
