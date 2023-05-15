@@ -345,7 +345,10 @@ class Posts {
             post.Comments = post.Comments.map(async (p) => {
                 let user = await schemas["user"].findOne({ UserID: p.UserID });
 
-                if (user || !user.error) return user;
+                if (user) return {
+                    comment: p,
+                    user: user
+                };
                 else return;
             });
 
