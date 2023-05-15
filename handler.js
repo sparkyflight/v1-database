@@ -71,15 +71,13 @@ class Users {
 	}
 
 	static async get(data) {
-		let doc = await schemas["user"].findOne(data);
-		if (doc) doc.Connections = [];
-
+		const doc = await schemas["user"].findOne(data);
 		return doc;
 	}
 
 	static async find(data) {
-		let doc = schemas["user"].find(data);
-		if (doc) doc.Connections = [];
+		let doc = await schemas["user"].find(data);
+		if (doc) doc["Connections"] = [];
 
 		return doc;
 	}
