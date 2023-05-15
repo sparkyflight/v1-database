@@ -72,11 +72,17 @@ class Users {
 
 	static async get(data) {
 		const doc = await schemas["user"].findOne(data);
+
+		if (doc) doc.Connections = [];
+
 		return doc;
 	}
 
 	static async find(data) {
 		const doc = schemas["user"].find(data);
+
+		if (doc) doc.Connections = [];
+
 		return doc;
 	}
 
@@ -276,6 +282,8 @@ class Posts {
 			}
 
 			if (user || !user.error) {
+				user.Connections = [];
+
 				let data = {
 					user: user,
 					post: post,
@@ -294,7 +302,6 @@ class Posts {
 	}
 
 	static async find(data, type) {
-  let Comments = [];
 		let posts = [];
 
 		const docs = await schemas["post"].find({
@@ -303,6 +310,8 @@ class Posts {
 		});
 
 		for (const post of docs) {
+			let Comments = [];
+
 			let user = {
 				data: await schemas["user"].findOne({ UserID: post.UserID }),
 				team: false,
@@ -313,32 +322,32 @@ class Posts {
 				team: true,
 			};
 
-                           for (const comment of post.Comments) { 
-                                 let user = await schemas["user"].findOne({ 
-                                         UserID: comment.UserID, 
-                                 }); 
-  
-                                 if (user) { 
-                                         user.Connections = []; 
-                                         Comments.push({ 
-                                                 comment: comment, 
-                                                 user: user, 
-                                         }); 
-                                 } else continue; 
-                         }
+			for (const comment of post.Comments) {
+				let user = await schemas["user"].findOne({
+					UserID: comment.UserID,
+				});
+
+				if (user) {
+					user.Connections = [];
+					Comments.push({
+						comment: comment,
+						user: user,
+					});
+				} else continue;
+			}
 
 			if (!user.data && !team.data) continue;
 			else {
-   post.Comments = Comments;
+				post.Comments = Comments;
 
-   (user.data === null ? team.data : user.data).Connections = [];
+				(user.data === null ? team.data : user.data).Connections = [];
 
 				posts.push({
 					post: post,
 					user: user.data === null ? team.data : user.data,
 					team: user.data === null ? true : false,
 				});
-   }
+			}
 		}
 
 		return posts;
