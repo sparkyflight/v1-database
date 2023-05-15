@@ -332,6 +332,8 @@ class Posts {
 		});
 
 		for (let post of docs) {
+            let Comments = [];
+
 			let user = {
 				data: await schemas["user"].findOne({ UserID: post.UserID }),
 				team: false,
@@ -341,13 +343,11 @@ class Posts {
 				data: await schemas["team"].findOne({ UserID: post.UserID }),
 				team: true,
 			};
-
-            post.Comments = [];
-
-            for (let comment of post.Comments) {
+            
+            for (const comment of post.Comments) {
                 let user = await schemas["user"].findOne({ UserID: comment.UserID });
 
-                if (user) post.Comments.push({
+                if (user) Comments.push({
                     comment: comment,
                     user: user
                 });
@@ -355,12 +355,15 @@ class Posts {
             };
 
 			if (!user.data && !team.data) continue;
-			else
+			else {
+                post.Comments = Comments;
+                
 				posts.push({
 					post: post,
 					user: user.data === null ? team.data : user.data,
 					team: user.data === null ? true : false,
 				});
+            }
 		}
 
 		return posts;
