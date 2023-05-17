@@ -539,6 +539,7 @@ class Posts {
 					$push: {
 						Comments: {
 							UserID: UserID,
+      CommentID: crypto.randomUUID(),
 							Caption: Caption,
 							Upvotes: [],
 							Downvotes: [],
