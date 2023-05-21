@@ -626,6 +626,11 @@ class Teams {
 		return schemas["team"].deleteOne(data);
 	}
 
+         static async find(data) { 
+                 const doc = await schemas["team"].find(data); 
+                 return doc; 
+         }
+
 	static async listUsersTeams(userid) {
 		let data = [];
 		const db = await schemas["team"].find();
