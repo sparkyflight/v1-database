@@ -34,11 +34,19 @@ for (const fileName of schemaFiles) {
 
 // Users
 class Users {
-	static async create(Name, UserID, UserTag, Bio, Avatar, CreatedAt, Connections) {
+	static async create(
+		Name,
+		UserID,
+		UserTag,
+		Bio,
+		Avatar,
+		CreatedAt,
+		Connections
+	) {
 		const doc = new schemas["user"]({
 			Name,
 			UserID,
-            UserTag,
+			UserTag,
 			Bio,
 			Avatar,
 			CreatedAt,
@@ -54,8 +62,8 @@ class Users {
 			.then(() => {
 				return {
 					Name,
-			        UserID,
-                    UserTag,
+					UserID,
+					UserTag,
 					Avatar,
 					CreatedAt,
 					Connections,
@@ -581,8 +589,8 @@ class Teams {
 			.then(() => {
 				return {
 					Name,
-			        UserID,
-                    UserTag,
+					UserID,
+					UserTag,
 					Bio,
 					Avatar,
 					CreatedAt: new Date(),
@@ -628,10 +636,10 @@ class Teams {
 		return schemas["team"].deleteOne(data);
 	}
 
-         static async find(data) { 
-                 const doc = await schemas["team"].find(data); 
-                 return doc; 
-         }
+	static async find(data) {
+		const doc = await schemas["team"].find(data);
+		return doc;
+	}
 
 	static async listUsersTeams(userid) {
 		let data = [];
