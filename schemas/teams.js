@@ -1,9 +1,9 @@
 const { Schema } = require("mongoose");
 
 const schema = new Schema({
-	Username: String,
- Tag: String,
+	Name: String,
 	UserID: String,
+    UserTag: String,
 	Bio: String,
 	Avatar: String,
 	CreatedAt: Date,

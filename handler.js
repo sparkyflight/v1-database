@@ -34,10 +34,11 @@ for (const fileName of schemaFiles) {
 
 // Users
 class Users {
-	static async create(Username, UserID, Bio, Avatar, CreatedAt, Connections) {
+	static async create(Name, UserID, UserTag, Bio, Avatar, CreatedAt, Connections) {
 		const doc = new schemas["user"]({
-			Username,
+			Name,
 			UserID,
+            UserTag,
 			Bio,
 			Avatar,
 			CreatedAt,
@@ -52,9 +53,9 @@ class Users {
 		doc.save()
 			.then(() => {
 				return {
-					Username,
-					UserID,
-					Bio,
+					Name,
+			        UserID,
+                    UserTag,
 					Avatar,
 					CreatedAt,
 					Connections,
@@ -558,11 +559,11 @@ class Posts {
 
 // Teams
 class Teams {
-	static async create(Username, UserID, Bio, Avatar, CreatorID) {
+	static async create(Name, UserID, UserTag, Bio, Avatar, CreatorID) {
 		const doc = new schemas["team"]({
-			Username,
+			Name,
 			UserID,
-			Bio,
+			UserTag,
 			Avatar,
 			CreatedAt: new Date(),
 			Following: [],
@@ -579,8 +580,9 @@ class Teams {
 		doc.save()
 			.then(() => {
 				return {
-					Username,
-					UserID,
+					Name,
+			        UserID,
+                    UserTag,
 					Bio,
 					Avatar,
 					CreatedAt: new Date(),
