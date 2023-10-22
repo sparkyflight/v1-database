@@ -1,4 +1,4 @@
-const { Schema } = require("mongoose");
+import { Schema } from "mongoose";
 
 const schema = new Schema({
 	Name: String,
@@ -7,15 +7,12 @@ const schema = new Schema({
 	Bio: String,
 	Avatar: String,
 	CreatedAt: Date,
-	Connections: Object,
-	Notifications: Object,
 	Followers: Object,
 	Following: Object,
-	Badges: Object,
-	StaffPerms: Object,
+	Members: Object,
 });
 
-module.exports = {
-	name: "user",
+export default {
+	name: "team",
 	schema: schema,
 };

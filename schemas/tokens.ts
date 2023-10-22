@@ -1,4 +1,4 @@
-const { Schema } = require("mongoose");
+import { Schema } from "mongoose";
 
 const schema = new Schema({
 	UserID: String,
@@ -7,7 +7,7 @@ const schema = new Schema({
 	Method: String,
 });
 
-module.exports = {
+export default {
 	name: "token",
 	schema: schema,
 };
