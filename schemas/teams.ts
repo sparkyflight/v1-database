@@ -1,18 +1,19 @@
-import { Schema } from "mongoose";
+import { DataTypes, Model } from "sequelize";
 
-const schema = new Schema({
-	Name: String,
-	UserID: String,
-	UserTag: String,
-	Bio: String,
-	Avatar: String,
-	CreatedAt: Date,
-	Followers: Object,
-	Following: Object,
-	Members: Object,
-});
+const Team = {
+	Name: DataTypes.STRING,
+	UserID: DataTypes.STRING,
+	UserTag: DataTypes.STRING,
+	Bio: DataTypes.STRING,
+	Avatar: DataTypes.STRING,
+	CreatedAt: DataTypes.DATE,
+	Subscribers: DataTypes.JSON,
+	Subscribed: DataTypes.JSON,
+	Members: DataTypes.JSON,
+	Badges: DataTypes.JSON,
+};
 
 export default {
 	name: "team",
-	schema: schema,
+	schema: Team,
 };

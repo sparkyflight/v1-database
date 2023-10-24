@@ -1,13 +1,13 @@
-import { Schema } from "mongoose";
+import { DataTypes, Model } from "sequelize";
 
-const schema = new Schema({
-	UserID: String,
-	CreatedAt: Date,
-	Token: String,
-	Method: String,
-});
+const Token = {
+	UserID: DataTypes.STRING,
+	CreatedAt: DataTypes.DATE,
+	Token: DataTypes.STRING,
+	Method: DataTypes.STRING,
+};
 
 export default {
 	name: "token",
-	schema: schema,
+	schema: Token,
 };

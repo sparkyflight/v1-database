@@ -1,37 +1,31 @@
 // Packages
-import mongoose from "mongoose";
+import { Model, Sequelize } from "sequelize";
 import fs from "fs";
-import { success, error } from "./logger.js";
 import "dotenv/config";
 import crypto from "crypto";
 
-// Connect to MongoDB
-const MONGO_URL = `mongodb+srv://select:PPA10082@nightmareproject.5en4i6u.mongodb.net/${
-	process.env.ENV === "production" ? "nightmarebot" : "development"
-}?retryWrites=true&w=majority`;
-
-mongoose.set("strictQuery", true);
-
-mongoose
-	.connect(MONGO_URL)
-	.then(() => {
-		success("Database", "Connected!");
-	})
-	.catch((err) => {
-		error("Database", `Failed to connect\nError: ${err}`);
-	});
+// Connect to PostgreSQL
+const sequelize = new Sequelize({
+	dialect: "postgres",
+	host: process.env.ENV === "production" ? "0.0.0.0" : "100.65.43.129",
+	username: "select",
+	password: "password",
+	database: "onlyfoodz",
+    logging: console.log
+});
 
 // Schemas
 const schemaFiles = fs
 	.readdirSync("./dist/database/schemas")
 	.filter((file) => file.endsWith(".js"));
-const schemas: { [key: string]: mongoose.Model<any> } = {};
+const schemas = {};
 
 for (const fileName of schemaFiles) {
 	import(`./schemas/${fileName}`)
 		.then((module) => {
 			const file = module.default;
-			schemas[file.name] = mongoose.model(file.name, file.schema);
+			const model = sequelize.define(file.name, file.schema);
+			schemas[file.name] = model;
 		})
 		.catch((error) => {
 			console.error(`Error importing ${fileName}: ${error}`);
