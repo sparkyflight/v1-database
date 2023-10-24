@@ -581,6 +581,7 @@ class Teams {
 			Name,
 			UserID,
 			UserTag,
+			Bio,
 			Avatar,
 			CreatedAt: new Date(),
 			Following: {},
@@ -600,6 +601,7 @@ class Teams {
 				Name,
 				UserID,
 				UserTag,
+				Bio,
 				Avatar,
 				CreatedAt: doc.CreatedAt,
 				Following: [],
@@ -779,6 +781,24 @@ class Teams {
 			return true;
 		} catch (err) {
 			return err;
+		}
+	}
+
+	static async listUsersTeams(UserID: string): Promise<object | Error> {
+		try {
+			let data = [];
+			const db = await schemas["team"].find();
+
+			db.forEach((team) => {
+				const i = team.Members.find((i) => i.ID === UserID);
+
+				if (i) data.push(team);
+				else return;
+			});
+
+			return data;
+		} catch (error) {
+			return error;
 		}
 	}
 }
