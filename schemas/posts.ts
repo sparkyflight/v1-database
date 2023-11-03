@@ -1,19 +1,39 @@
-import { DataTypes, Model } from "sequelize";
+import { DataTypes } from "sequelize";
 
 const Post = {
-	UserID: DataTypes.STRING,
-	Caption: DataTypes.STRING,
-	Image: DataTypes.STRING,
-	Plugins: DataTypes.JSON,
-	Type: DataTypes.INTEGER,
-	CreatedAt: DataTypes.DATE,
-	PostID: DataTypes.STRING,
-	Upvotes: DataTypes.JSON,
-	Downvotes: DataTypes.JSON,
-	Comments: DataTypes.JSON,
+	userid: {
+		type: DataTypes.STRING,
+	},
+	caption: {
+		type: DataTypes.STRING,
+	},
+	image: {
+		type: DataTypes.STRING,
+	},
+	plugins: {
+		type: DataTypes.JSON,
+	},
+	type: {
+		type: DataTypes.INTEGER,
+	},
+	createdat: {
+		type: DataTypes.DATE,
+	},
+	postid: {
+		type: DataTypes.STRING,
+	},
+	upvotes: {
+		type: DataTypes.JSON,
+	},
+	downvotes: {
+		type: DataTypes.JSON,
+	},
+	comments: {
+		type: DataTypes.JSON,
+	},
 };
 
 export default {
-	name: "post",
+	name: "posts",
 	schema: Post,
 };

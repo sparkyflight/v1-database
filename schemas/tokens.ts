@@ -1,13 +1,21 @@
-import { DataTypes, Model } from "sequelize";
+import { DataTypes } from "sequelize";
 
 const Token = {
-	UserID: DataTypes.STRING,
-	CreatedAt: DataTypes.DATE,
-	Token: DataTypes.STRING,
-	Method: DataTypes.STRING,
+	userid: {
+		type: DataTypes.STRING,
+	},
+	createdat: {
+		type: DataTypes.DATE,
+	},
+	token: {
+		type: DataTypes.STRING,
+	},
+	method: {
+		type: DataTypes.STRING,
+	},
 };
 
 export default {
-	name: "token",
+	name: "tokens",
 	schema: Token,
 };

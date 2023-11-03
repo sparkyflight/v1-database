@@ -1,19 +1,39 @@
-import { DataTypes, Model } from "sequelize";
+import { DataTypes } from "sequelize";
 
 const Team = {
-	Name: DataTypes.STRING,
-	UserID: DataTypes.STRING,
-	UserTag: DataTypes.STRING,
-	Bio: DataTypes.STRING,
-	Avatar: DataTypes.STRING,
-	CreatedAt: DataTypes.DATE,
-	Subscribers: DataTypes.JSON,
-	Subscribed: DataTypes.JSON,
-	Members: DataTypes.JSON,
-	Badges: DataTypes.JSON,
+	Name: {
+		type: DataTypes.STRING,
+	},
+	UserID: {
+		type: DataTypes.STRING,
+	},
+	UserTag: {
+		type: DataTypes.STRING,
+	},
+	Bio: {
+		type: DataTypes.STRING,
+	},
+	Avatar: {
+		type: DataTypes.STRING,
+	},
+	CreatedAt: {
+		type: DataTypes.DATE,
+	},
+	Subscribers: {
+		type: DataTypes.JSON,
+	},
+	Subscribed: {
+		type: DataTypes.JSON,
+	},
+	Members: {
+		type: DataTypes.JSON,
+	},
+	Badges: {
+		type: DataTypes.JSON,
+	},
 };
 
 export default {
-	name: "team",
+	name: "teams",
 	schema: Team,
 };

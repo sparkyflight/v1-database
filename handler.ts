@@ -1,5 +1,6 @@
 // Packages
 import { Model, Sequelize } from "sequelize";
+import { info, error } from "./logger.js";
 import fs from "fs";
 import "dotenv/config";
 import crypto from "crypto";
@@ -11,104 +12,111 @@ const sequelize = new Sequelize({
 	username: "select",
 	password: "password",
 	database: "onlyfoodz",
-    logging: console.log
+	logging: (r) => {
+		return console.log(r);
+	},
+	define: {
+		timestamps: false,
+	},
 });
+
+sequelize
+	.authenticate()
+	.then(() => info("PostgreSQL", "Connected!"))
+	.catch((err) => error("PostgreSQL", `Unable to connect.\nError: ${err}`));
 
 // Schemas
 const schemaFiles = fs
 	.readdirSync("./dist/database/schemas")
 	.filter((file) => file.endsWith(".js"));
-const schemas = {};
+let schemas = [];
+let schemaData = [];
 
 for (const fileName of schemaFiles) {
 	import(`./schemas/${fileName}`)
 		.then((module) => {
 			const file = module.default;
-			const model = sequelize.define(file.name, file.schema);
-			schemas[file.name] = model;
+
+			schemaData[file.name] = file;
+			schemas[file.name] = sequelize.define(file.name, file.schema);
 		})
 		.catch((error) => {
-			console.error(`Error importing ${fileName}: ${error}`);
+			console.error(error);
 		});
 }
 
 // Users
-class Users {
-	static async create(
-		Name: string,
-		UserID: string,
-		UserTag: string,
-		Bio: string,
-		Avatar: string,
-		CreatedAt: Date,
-		Connections: object
-	): Promise<object | Error> {
-		const doc = new schemas["user"]({
-			Name,
-			UserID,
-			UserTag,
-			Bio,
-			Avatar,
-			CreatedAt,
-			Connections,
-			Notifications: {},
-			Following: [],
-			Followers: [],
-			Badges: [],
-			StaffPerms: [],
-		});
+class Users extends Model {
+	subscribed: any;
+	subscribers: any;
 
+	static async createUser(
+		name: string,
+		userid: string,
+		usertag: string,
+		bio: string,
+		avatar: string
+	): Promise<boolean | Error> {
 		try {
-			await doc.save();
-			return {
-				Name,
-				UserID,
-				UserTag,
-				Avatar,
-				CreatedAt,
-				Connections,
-				Notifications: [],
-				Following: [],
-				Followers: [],
-				Badges: [],
-				StaffPerms: [],
-			};
-		} catch (err) {
-			return err;
+			await Users.create({
+				name,
+				userid,
+				usertag,
+				bio,
+				avatar,
+				createdat: new Date(),
+				subscribers: [],
+				subscribed: [],
+				badges: [],
+				coins: 200,
+			});
+
+			return true;
+		} catch (error) {
+			return error;
 		}
 	}
 
-	static async get(data: object): Promise<object | null> {
-		const doc = await schemas["user"].findOne(data);
+	static async get(data: any): Promise<object | null> {
+		const doc = await Users.findOne({
+			where: data,
+		});
+
 		return doc;
 	}
 
-	static async find(data: object): Promise<object[]> {
-		const docs = await schemas["user"].find(data);
-
-		return docs.map((p) => {
-			let d = p.toObject();
-			d["Connections"] = [];
-			return d;
+	static async find(data: any): Promise<object[]> {
+		const docs = await Users.findAll({
+			where: data,
 		});
+
+		return docs;
 	}
 
-	static async update(id: string, data: object): Promise<object | Error> {
+	static async updateUser(
+		id: string,
+		data: object
+	): Promise<boolean | Error> {
 		try {
-			const result = await schemas["user"].updateOne(
-				{ UserID: id },
-				data
-			);
-			return result;
+			await Users.update(data, {
+				where: {
+					userid: id,
+				},
+			});
+
+			return true;
 		} catch (err) {
 			return err;
 		}
 	}
 
-	static async delete(data: object): Promise<object | Error> {
+	static async delete(data: any): Promise<boolean | Error> {
 		try {
-			const result = await schemas["user"].deleteOne(data);
-			return result;
+			await Users.destroy({
+				where: data,
+			});
+
+			return true;
 		} catch (err) {
 			return err;
 		}
@@ -119,20 +127,42 @@ class Users {
 		Target: string
 	): Promise<boolean | Error> {
 		try {
-			await schemas["user"].updateOne(
-				{ UserID: Target },
+			const user = await Users.findOne({
+				where: {
+					userid: UserID,
+				},
+			});
+
+			const target = await Users.findOne({
+				where: {
+					userid: Target,
+				},
+			});
+
+			let subscribed = user.subscribed;
+			subscribed.push(Target);
+
+			let subscribers = target.subscribers;
+			subscribers.push(UserID);
+
+			await Users.update(
 				{
-					$push: {
-						Followers: UserID,
+					subscribers: subscribers,
+				},
+				{
+					where: {
+						userid: Target,
 					},
 				}
 			);
 
-			await schemas["user"].updateOne(
-				{ UserID: UserID },
+			await Users.update(
 				{
-					$push: {
-						Following: Target,
+					Subscribed: subscribed,
+				},
+				{
+					where: {
+						userid: UserID,
 					},
 				}
 			);
@@ -148,20 +178,42 @@ class Users {
 		Target: string
 	): Promise<boolean | Error> {
 		try {
-			await schemas["user"].updateOne(
-				{ UserID: Target },
+			const user = await Users.findOne({
+				where: {
+					userid: UserID,
+				},
+			});
+
+			const target = await Users.findOne({
+				where: {
+					userid: Target,
+				},
+			});
+
+			let subscribed = user.subscribed;
+			delete subscribed[subscribed.findIndex((p) => p === Target)];
+
+			let subscribers = target.subscribers;
+			delete subscribers[subscribers.findIndex((p) => p === UserID)];
+
+			await Users.update(
 				{
-					$pull: {
-						Followers: UserID,
+					subscribers: subscribers,
+				},
+				{
+					where: {
+						UserID: Target,
 					},
 				}
 			);
 
-			await schemas["user"].updateOne(
-				{ UserID: UserID },
+			await Users.update(
 				{
-					$pull: {
-						Following: Target,
+					subscribed: subscribed,
+				},
+				{
+					where: {
+						UserID: UserID,
 					},
 				}
 			);
@@ -174,33 +226,40 @@ class Users {
 }
 
 // Tokens
-class Tokens {
-	static async create(
-		UserID: string,
-		Token: string,
-		Method: string
-	): Promise<object | Error> {
-		const doc = new schemas["token"]({
-			UserID,
-			CreatedAt: new Date(),
-			Token,
-			Method,
-		});
+class Tokens extends Model {
+	userid: any;
 
+	static async createToken(
+		userid: string,
+		token: string,
+		method: string
+	): Promise<boolean | Error> {
 		try {
-			await doc.save();
-			return doc;
+			await Tokens.create({
+				userid,
+				createdat: new Date(),
+				token,
+				method,
+			});
+
+			return true;
 		} catch (err) {
 			return err;
 		}
 	}
 
 	static async get(token: string): Promise<object | Error> {
-		const tokenData = await schemas["token"].findOne({ Token: token });
+		const tokenData = await Tokens.findOne({
+			where: {
+				token: token,
+			},
+		});
 
 		if (tokenData) {
-			const user = await schemas["user"].findOne({
-				UserID: tokenData.UserID,
+			const user = await Tokens.findOne({
+				where: {
+					userid: tokenData.userid,
+				},
 			});
 
 			if (user) {
@@ -218,15 +277,27 @@ class Tokens {
 		}
 	}
 
-	static async getAllUserTokens(UserID: string): Promise<object[]> {
-		const doc = await schemas["token"].find({ UserID });
-		return doc;
+	static async getAllUserTokens(userid: string): Promise<object[] | Error> {
+		try {
+			const doc = await Tokens.findAll({
+				where: {
+					userid: userid,
+				},
+			});
+
+			return doc;
+		} catch (error) {
+			return error;
+		}
 	}
 
-	static async delete(data: object): Promise<object | Error> {
+	static async delete(data: any): Promise<boolean | Error> {
 		try {
-			const result = await schemas["token"].deleteOne(data);
-			return result;
+			await Tokens.destroy({
+				where: data,
+			});
+
+			return true;
 		} catch (err) {
 			return err;
 		}
@@ -234,59 +305,61 @@ class Tokens {
 }
 
 // Posts
-class Posts {
-	static async create(
-		UserID: string,
-		Caption: string,
-		Image: string,
-		Plugins: object,
-		Type: number
-	): Promise<object | Error> {
-		const doc = new schemas["post"]({
-			UserID,
-			Caption,
-			Image,
-			Plugins,
-			Type,
-			CreatedAt: new Date(),
-			PostID: crypto.randomUUID(),
-			Upvotes: [],
-			Downvotes: [],
-			Comments: [],
-		});
-
+class Posts extends Model {
+	UserID: any; // wip
+	comments: any;
+	static async createPost(
+		userid: string,
+		caption: string,
+		image: string,
+		plugins: object,
+		type: number
+	): Promise<boolean | Error> {
 		try {
-			await doc.save();
-			return { success: true };
+			await Posts.create({
+				userid,
+				caption,
+				image,
+				plugins,
+				type,
+				createdat: new Date(),
+				postid: crypto.randomUUID(),
+				upvotes: [],
+				downvotes: [],
+				comments: [],
+			});
+
+			return true;
 		} catch (err) {
 			return err;
 		}
 	}
 
 	static async get(PostID: string): Promise<object | Error> {
-		let post = await schemas["post"].findOne({ PostID });
+		let post = await Posts.findOne({
+			where: {
+				postid: PostID,
+			},
+		});
 
 		let Comments: object[] = [];
 
 		if (post) {
-			let user = await schemas["user"].findOne({ UserID: post.UserID });
+			let user = await Users.get({ UserID: post.UserID });
 			let team = false;
 
-			if (!user || user.error) {
-				user = await schemas["team"].findOne({ UserID: post.UserID });
-				if (user || !user.error) team = true;
+			if (!user) {
+				user = await Users.get({ UserID: post.UserID });
+				if (user) team = true;
 			}
 
-			if (user || !user.error) {
-				user.Connections = [];
-
-				for (const comment of post.Comments) {
-					let user = await schemas["user"].findOne({
+			if (user) {
+				for (const comment of post.comments) {
+					let user = await Users.get({
 						UserID: comment.UserID,
 					});
 
 					if (user) {
-						user.Connections = [];
 						Comments.push({
 							comment: comment,
 							user: user,
@@ -294,7 +367,7 @@ class Posts {
 					} else continue;
 				}
 
-				post.Comments = Comments;
+				post.comments = Comments;
 
 				let data = {
 					user: user,
@@ -418,7 +491,7 @@ class Posts {
 		return posts;
 	}
 
-	static async update(id: string, data: object): Promise<object | Error> {
+	static async updatePost(id: string, data: object): Promise<object | Error> {
 		try {
 			const result = await schemas["post"].updateOne(
 				{ PostID: id },
@@ -562,8 +635,8 @@ class Posts {
 }
 
 // Teams
-class Teams {
-	static async create(
+class Teams extends Model {
+	static async createTeam(
 		Name: string,
 		UserID: string,
 		UserTag: string,
@@ -635,7 +708,7 @@ class Teams {
 		});
 	}
 
-	static async update(id: string, data: object): Promise<object | Error> {
+	static async updateTeam(id: string, data: object): Promise<object | Error> {
 		try {
 			const result = await schemas["team"].updateOne(
 				{ UserID: id },
@@ -796,6 +869,31 @@ class Teams {
 		}
 	}
 }
+
+const init = () => {
+	Users.init(schemaData["users"].schema, {
+		sequelize: sequelize,
+		modelName: schemaData["users"].name,
+	});
+
+	Tokens.init(schemaData["tokens"].schema, {
+		sequelize: sequelize,
+		modelName: schemaData["tokens"].name,
+	});
+
+	Teams.init(schemaData["teams"].schema, {
+		sequelize: sequelize,
+		modelName: schemaData["teams"].name,
+	});
+
+	Posts.init(schemaData["posts"].name, {
+		sequelize: sequelize,
+		modelName: schemaData["posts"].name,
+	});
+
+	sequelize.sync();
+};
+setTimeout(() => init(), 2000);
 
 // Export the classes
 export { Users, Tokens, Posts, Teams };
