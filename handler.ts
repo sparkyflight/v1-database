@@ -306,8 +306,9 @@ class Tokens extends Model {
 
 // Posts
 class Posts extends Model {
-	UserID: any; // wip
+	userid: any;
 	comments: any;
+
 	static async createPost(
 		userid: string,
 		caption: string,
@@ -345,18 +346,18 @@ class Posts extends Model {
 		let Comments: object[] = [];
 
 		if (post) {
-			let user = await Users.get({ UserID: post.UserID });
+			let user = await Users.get({ userid: post.UserID });
 			let team = false;
 
 			if (!user) {
-				user = await Users.get({ UserID: post.UserID });
+				user = await Users.get({ userid: post.UserID });
 				if (user) team = true;
 			}
 
 			if (user) {
 				for (const comment of post.comments) {
 					let user = await Users.get({
-						UserID: comment.UserID,
+						UserID: comment.userid,
 					});
 
 					if (user) {
@@ -391,31 +392,32 @@ class Posts extends Model {
 	static async find(data: object, type: string): Promise<object[]> {
 		let posts: object[] = [];
 
-		const docs = await schemas["post"].find({
-			data: data,
+		const docs = await Posts.findAll({
+			where: {
+			...data,
 			type: type,
+			}
 		});
 
 		for (const post of docs) {
 			let Comments: object[] = [];
 
 			let user = {
-				data: await schemas["user"].findOne({ UserID: post.UserID }),
+				data: await Users.get({ userid: post.userid }),
 				team: false,
 			};
 
 			let team = {
-				data: await schemas["team"].findOne({ UserID: post.UserID }),
+				data: await Teams.get({ userid: post.userid }),
 				team: true,
 			};
 
-			for (const comment of post.Comments) {
-				let user = await schemas["user"].findOne({
-					UserID: comment.UserID,
+			for (const comment of post.comments) {
+				let user = await Users.get({
+					UserID: comment.userid,
 				});
 
 				if (user) {
-					user.Connections = [];
 					Comments.push({
 						comment: comment,
 						user: user,
@@ -425,9 +427,7 @@ class Posts extends Model {
 
 			if (!user.data && !team.data) continue;
 			else {
-				post.Comments = Comments;
-
-				(user.data === null ? team.data : user.data).Connections = [];
+				post.comments = Comments;
 
 				posts.push({
 					post: post,
@@ -443,30 +443,29 @@ class Posts extends Model {
 	static async listAllPosts(type: string): Promise<object[]> {
 		let posts: object[] = [];
 
-		const docs = await schemas["post"].find({
-			Type: type,
+		const docs = await Posts.findAll({
+			type: type,
 		});
 
 		for (let post of docs) {
 			let Comments: object[] = [];
 
 			let user = {
-				data: await schemas["user"].findOne({ UserID: post.UserID }),
+				data: await Users.get({ userid: post.userid }),
 				team: false,
 			};
 
 			let team = {
-				data: await schemas["team"].findOne({ UserID: post.UserID }),
+				data: await Teams.get({ userid: post.userid }),
 				team: true,
 			};
 
-			for (const comment of post.Comments) {
-				let user = await schemas["user"].findOne({
-					UserID: comment.UserID,
+			for (const comment of post.comments) {
+				let user = await Users.get({
+					userid: comment.userid,
 				});
 
 				if (user) {
-					user.Connections = [];
 					Comments.push({
 						comment: comment,
 						user: user,
@@ -476,9 +475,7 @@ class Posts extends Model {
 
 			if (!user.data && !team.data) continue;
 			else {
-				post.Comments = Comments;
-
-				(user.data === null ? team.data : user.data).Connections = [];
+				post.comments = Comments;
 
 				posts.push({
 					post: post,
@@ -491,7 +488,7 @@ class Posts extends Model {
 		return posts;
 	}
 
-	static async updatePost(id: string, data: object): Promise<object | Error> {
+	static async updatePost(id: string, data: object): Promise<object | Error> { // wip
 		try {
 			const result = await schemas["post"].updateOne(
 				{ PostID: id },
