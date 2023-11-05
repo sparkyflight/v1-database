@@ -346,11 +346,11 @@ class Posts extends Model {
 		let Comments: object[] = [];
 
 		if (post) {
-			let user = await Users.get({ userid: post.UserID });
+			let user = await Users.get({ userid: post.userid });
 			let team = false;
 
 			if (!user) {
-				user = await Users.get({ userid: post.UserID });
+				user = await Users.get({ userid: post.userid });
 				if (user) team = true;
 			}
 
@@ -394,9 +394,9 @@ class Posts extends Model {
 
 		const docs = await Posts.findAll({
 			where: {
-			...data,
-			type: type,
-			}
+				...data,
+				type: type,
+			},
 		});
 
 		for (const post of docs) {
@@ -488,13 +488,15 @@ class Posts extends Model {
 		return posts;
 	}
 
-	static async updatePost(id: string, data: object): Promise<object | Error> { // wip
+	static async updatePost(id: string, data: any): Promise<boolean | Error> {
 		try {
-			const result = await schemas["post"].updateOne(
-				{ PostID: id },
-				data
-			);
-			return result;
+			await Posts.update(data, {
+				where: {
+					postid: id,
+				},
+			});
+
+			return true;
 		} catch (err) {
 			return err;
 		}
@@ -506,31 +508,29 @@ class Posts extends Model {
 	): Promise<object[]> {
 		let posts: object[] = [];
 
-		const docs = await schemas["post"].find({
-			UserID,
-			Type,
+		const docs = await Posts.findAll({
+			where: { userid: UserID, type: Type },
 		});
 
 		for (let post of docs) {
 			let Comments: object[] = [];
 
 			let user = {
-				data: await schemas["user"].findOne({ UserID: post.UserID }),
+				data: await Users.get({ userid: post.userid }),
 				team: false,
 			};
 
 			let team = {
-				data: await schemas["team"].findOne({ UserID: post.UserID }),
+				data: await Teams.get({ userid: post.userid }),
 				team: true,
 			};
 
-			for (const comment of post.Comments) {
-				let user = await schemas["user"].findOne({
-					UserID: comment.UserID,
+			for (const comment of post.comments) {
+				let user = await Users.get({
+					userid: comment.userid,
 				});
 
 				if (user) {
-					user.Connections = [];
 					Comments.push({
 						comment: comment,
 						user: user,
@@ -540,7 +540,7 @@ class Posts extends Model {
 
 			if (!user.data && !team.data) continue;
 			else {
-				post.Comments = Comments;
+				post.comments = Comments;
 
 				posts.push(post);
 			}
@@ -549,12 +549,15 @@ class Posts extends Model {
 		return posts;
 	}
 
-	static async delete(PostID: string): Promise<object | Error> {
+	static async delete(PostID: string): Promise<boolean | Error> {
 		try {
-			const result = await schemas["post"].deleteOne({
-				PostID,
+			await Posts.destroy({
+				where: {
+					postid: PostID,
+				},
 			});
-			return result;
+
+			return true;
 		} catch (err) {
 			return err;
 		}
