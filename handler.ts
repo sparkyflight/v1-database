@@ -1,8 +1,14 @@
 // Packages
-import { Model, Sequelize } from "sequelize";
+import { Sequelize, Model, Table } from "sequelize-typescript";
 import { info, error } from "./logger.js";
 import fs from "fs";
 import "dotenv/config";
+import {
+	PostsTypings,
+	UsersTypings,
+	TokensTypings,
+	TeamsTypings,
+} from "./types.interface.js";
 import crypto from "crypto";
 
 // Connect to PostgreSQL
@@ -29,16 +35,13 @@ sequelize
 const schemaFiles = fs
 	.readdirSync("./dist/database/schemas")
 	.filter((file) => file.endsWith(".js"));
-let schemas = [];
 let schemaData = [];
 
 for (const fileName of schemaFiles) {
 	import(`./schemas/${fileName}`)
 		.then((module) => {
 			const file = module.default;
-
 			schemaData[file.name] = file;
-			schemas[file.name] = sequelize.define(file.name, file.schema);
 		})
 		.catch((error) => {
 			console.error(error);
@@ -46,9 +49,20 @@ for (const fileName of schemaFiles) {
 }
 
 // Users
-class Users extends Model {
-	subscribed: any;
-	subscribers: any;
+@Table({
+	tableName: "users",
+})
+class Users extends Model implements UsersTypings {
+	name: string;
+	userid: string;
+	usertag: string;
+	bio: string;
+	avatar: string;
+	createdat: Date;
+	subscribers: string[];
+	subscribed: string[];
+	badges: string[];
+	coins: number;
 
 	static async createUser(
 		name: string,
@@ -77,15 +91,16 @@ class Users extends Model {
 		}
 	}
 
-	static async get(data: any): Promise<object | null> {
+	static async get(data: any): Promise<UsersTypings | null> {
 		const doc = await Users.findOne({
 			where: data,
 		});
 
-		return doc;
+		if (!doc) return null;
+		else return doc;
 	}
 
-	static async find(data: any): Promise<object[]> {
+	static async find(data: any): Promise<UsersTypings[]> {
 		const docs = await Users.findAll({
 			where: data,
 		});
@@ -158,7 +173,7 @@ class Users extends Model {
 
 			await Users.update(
 				{
-					Subscribed: subscribed,
+					subscribed: subscribed,
 				},
 				{
 					where: {
@@ -202,7 +217,7 @@ class Users extends Model {
 				},
 				{
 					where: {
-						UserID: Target,
+						userid: Target,
 					},
 				}
 			);
@@ -213,7 +228,7 @@ class Users extends Model {
 				},
 				{
 					where: {
-						UserID: UserID,
+						userid: UserID,
 					},
 				}
 			);
@@ -226,8 +241,14 @@ class Users extends Model {
 }
 
 // Tokens
-class Tokens extends Model {
-	userid: any;
+@Table({
+	tableName: "tokens",
+})
+class Tokens extends Model implements TokensTypings {
+	userid: string;
+	createdat: Date;
+	token: string;
+	method: string;
 
 	static async createToken(
 		userid: string,
@@ -305,15 +326,26 @@ class Tokens extends Model {
 }
 
 // Posts
-class Posts extends Model {
-	userid: any;
-	comments: any;
+@Table({
+	tableName: "posts",
+})
+class Posts extends Model implements PostsTypings {
+	userid: string;
+	caption: string;
+	image: string;
+	plugins: any[];
+	type: number;
+	createdat: Date;
+	postid: string;
+	upvotes: string[];
+	downvotes: string[];
+	comments: any[];
 
 	static async createPost(
 		userid: string,
 		caption: string,
 		image: string,
-		plugins: object,
+		plugins: any,
 		type: number
 	): Promise<boolean | Error> {
 		try {
@@ -336,7 +368,7 @@ class Posts extends Model {
 		}
 	}
 
-	static async get(PostID: string): Promise<object | Error> {
+	static async get(PostID: string): Promise<any | Error> {
 		let post = await Posts.findOne({
 			where: {
 				postid: PostID,
@@ -566,18 +598,14 @@ class Posts extends Model {
 	static async upvote(
 		PostID: string,
 		UserID: string
-	): Promise<object | Error> {
+	): Promise<boolean | Error> {
 		try {
-			const result = await schemas["post"].updateOne(
-				{
-					PostID,
-				},
-				{
-					$push: {
-						Upvotes: UserID,
-					},
-				}
-			);
+			const post = await Posts.get(PostID);
+			post.upvotes.push(UserID);
+
+			const result = await Posts.updatePost(PostID, {
+				upvotes: post.upvotes,
+			});
 			return result;
 		} catch (err) {
 			return err;
@@ -587,18 +615,14 @@ class Posts extends Model {
 	static async downvote(
 		PostID: string,
 		UserID: string
-	): Promise<object | Error> {
+	): Promise<boolean | Error> {
 		try {
-			const result = await schemas["post"].updateOne(
-				{
-					PostID,
-				},
-				{
-					$push: {
-						Downvotes: UserID,
-					},
-				}
-			);
+			const post = await Posts.get(PostID);
+			post.downvotes.push(UserID);
+
+			const result = await Posts.updatePost(PostID, {
+				downvotes: post.downvotes,
+			});
 			return result;
 		} catch (err) {
 			return err;
@@ -609,24 +633,17 @@ class Posts extends Model {
 		PostID: string,
 		UserID: string,
 		Caption: string
-	): Promise<object | Error> {
+	): Promise<boolean | Error> {
 		try {
-			const result = await schemas["post"].updateOne(
-				{
-					PostID,
+			const result = await Posts.updatePost(PostID, {
+				comments: {
+					UserID: UserID,
+					CommentID: crypto.randomUUID(),
+					Caption: Caption,
+					Upvotes: [],
+					Downvotes: [],
 				},
-				{
-					$push: {
-						Comments: {
-							UserID: UserID,
-							CommentID: crypto.randomUUID(),
-							Caption: Caption,
-							Upvotes: [],
-							Downvotes: [],
-						},
-					},
-				}
-			);
+			});
 			return result;
 		} catch (err) {
 			return err;
@@ -635,119 +652,146 @@ class Posts extends Model {
 }
 
 // Teams
-class Teams extends Model {
-	static async createTeam(
-		Name: string,
-		UserID: string,
-		UserTag: string,
-		Bio: string,
-		Avatar: string,
-		CreatorID: string
-	): Promise<object | Error> {
-		const doc = new schemas["team"]({
-			Name,
-			UserID,
-			UserTag,
-			Bio,
-			Avatar,
-			CreatedAt: new Date(),
-			Following: {},
-			Followers: {},
-			Members: [
-				{
-					ID: CreatorID,
-					Roles: ["OWNER"],
-					MemberAddedAt: new Date(),
-				},
-			],
-		});
+@Table({
+	tableName: "teams",
+})
+class Teams extends Model implements TeamsTypings {
+	name: string;
+	userid: string;
+	usertag: string;
+	bio: string;
+	avatar: string;
+	createdat: Date;
+	supporters: string[];
+	members: any[];
+	badges: string[];
 
+	static async createTeam(
+		name: string,
+		userid: string,
+		usertag: string,
+		bio: string,
+		avatar: string,
+		creatorid: string
+	): Promise<boolean | Error> {
 		try {
-			await doc.save();
-			return {
-				Name,
-				UserID,
-				UserTag,
-				Bio,
-				Avatar,
-				CreatedAt: doc.CreatedAt,
-				Following: [],
-				Followers: [],
-				Members: [
+			await Teams.create({
+				name,
+				userid,
+				usertag,
+				bio,
+				avatar,
+				createdat: new Date(),
+				supporters: [],
+				members: [
 					{
-						ID: CreatorID,
-						Roles: ["OWNER"],
-						MemberAddedAt: doc.CreatedAt,
+						id: creatorid,
+						roles: ["OWNER"],
+						memberaddedat: new Date(),
 					},
 				],
-			};
+			});
+
+			return true;
 		} catch (err) {
 			return err;
 		}
 	}
 
-	static async get(data: object): Promise<object | null> {
-		const doc = await schemas["team"].findOne(data);
+	static async get(data: any): Promise<TeamsTypings | null> {
+		const doc = await Teams.findOne({
+			where: data,
+		});
 		return doc;
 	}
 
-	static async find(data: object): Promise<object[]> {
-		const docs = await schemas["team"].find(data);
+	static async find(data: any): Promise<TeamsTypings[]> {
+		const docs = await Teams.findAll({
+			where: data,
+		});
 
 		return docs.map((t) => {
-			t["Members"] = t["Members"].map((member) => {
+			t["members"] = t["members"].map((member) => {
 				return {
-					ID: member.ID,
-					Roles: member.Roles,
-					MemberAddedAt: member.MemberAddedAt,
+					id: member.id,
+					roles: member.roles,
+					memberaddedat: member.memberaddedat,
 				};
 			});
-			t["Following"] = [];
-			t["Followers"] = [];
+			t["supporters"] = [];
 			return t;
 		});
 	}
 
-	static async updateTeam(id: string, data: object): Promise<object | Error> {
+	static async updateTeam(
+		id: string,
+		data: object
+	): Promise<boolean | Error> {
 		try {
-			const result = await schemas["team"].updateOne(
-				{ UserID: id },
-				data
-			);
-			return result;
+			await Teams.update(data, {
+				where: {
+					userid: id,
+				},
+			});
+			return true;
 		} catch (err) {
 			return err;
 		}
 	}
 
-	static async delete(data: object): Promise<object | Error> {
+	static async delete(data: any): Promise<boolean | Error> {
 		try {
-			const result = await schemas["team"].deleteOne(data);
-			return result;
+			await Teams.destroy({
+				where: data,
+			});
+
+			return true;
 		} catch (err) {
 			return err;
 		}
 	}
 
-	static async follow(
+	static async support(
 		UserID: string,
 		TeamID: string
 	): Promise<boolean | Error> {
 		try {
-			await schemas["team"].updateOne(
-				{ UserID: TeamID },
+			const user = await Users.findOne({
+				where: {
+					userid: UserID,
+				},
+			});
+
+			const target = await Teams.findOne({
+				where: {
+					userid: TeamID,
+				},
+			});
+
+			let subscribed = user.subscribed;
+			subscribed.push(TeamID);
+
+			let supporters = target.supporters;
+			supporters.push(UserID);
+
+			await Teams.update(
 				{
-					$push: {
-						Followers: UserID,
+					supporters: supporters,
+				},
+				{
+					where: {
+						userid: TeamID,
 					},
 				}
 			);
 
-			await schemas["user"].updateOne(
-				{ UserID: UserID },
+			await Users.update(
 				{
-					$push: {
-						Following: TeamID,
+					subscribed: subscribed,
+				},
+				{
+					where: {
+						userid: UserID,
 					},
 				}
 			);
@@ -758,25 +802,47 @@ class Teams extends Model {
 		}
 	}
 
-	static async unfollow(
+	static async unsupport(
 		UserID: string,
 		TeamID: string
 	): Promise<boolean | Error> {
 		try {
-			await schemas["team"].updateOne(
-				{ UserID: TeamID },
+			const user = await Users.findOne({
+				where: {
+					userid: UserID,
+				},
+			});
+
+			const target = await Teams.findOne({
+				where: {
+					userid: TeamID,
+				},
+			});
+
+			let subscribed = user.subscribed;
+			delete subscribed[subscribed.findIndex((p) => p === TeamID)];
+
+			let supporters = target.supporters;
+			delete supporters[supporters.findIndex((p) => p === UserID)];
+
+			await Teams.update(
 				{
-					$pull: {
-						Followers: UserID,
+					supporters: supporters,
+				},
+				{
+					where: {
+						userid: TeamID,
 					},
 				}
 			);
 
-			await schemas["user"].updateOne(
-				{ UserID: UserID },
+			await Users.update(
 				{
-					$pull: {
-						Following: TeamID,
+					subscribed: subscribed,
+				},
+				{
+					where: {
+						userid: UserID,
 					},
 				}
 			);
@@ -787,7 +853,7 @@ class Teams extends Model {
 		}
 	}
 
-	static async invite(
+	/*static async invite(
 		TeamID: string,
 		UserID: string
 	): Promise<boolean | Error> {
@@ -849,15 +915,17 @@ class Teams extends Model {
 		} catch (err) {
 			return err;
 		}
-	}
+	}*/
 
-	static async listUsersTeams(UserID: string): Promise<object | Error> {
+	static async listUsersTeams(
+		UserID: string
+	): Promise<TeamsTypings[] | Error> {
 		try {
 			let data = [];
-			const db = await schemas["team"].find();
+			const db = await Teams.findAll();
 
 			db.forEach((team) => {
-				const i = team.Members.find((i) => i.ID === UserID);
+				const i = team.members.find((i) => i.ID === UserID);
 
 				if (i) data.push(team);
 				else return;
@@ -871,6 +939,8 @@ class Teams extends Model {
 }
 
 const init = () => {
+	sequelize.addModels([Users, Tokens, Teams, Posts]);
+
 	Users.init(schemaData["users"].schema, {
 		sequelize: sequelize,
 		modelName: schemaData["users"].name,
@@ -886,7 +956,7 @@ const init = () => {
 		modelName: schemaData["teams"].name,
 	});
 
-	Posts.init(schemaData["posts"].name, {
+	Posts.init(schemaData["posts"].schema, {
 		sequelize: sequelize,
 		modelName: schemaData["posts"].name,
 	});

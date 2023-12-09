@@ -1,34 +1,31 @@
 import { DataTypes } from "sequelize";
 
 const Team = {
-	Name: {
+	name: {
 		type: DataTypes.STRING,
 	},
-	UserID: {
+	userid: {
 		type: DataTypes.STRING,
 	},
-	UserTag: {
+	usertag: {
 		type: DataTypes.STRING,
 	},
-	Bio: {
+	bio: {
 		type: DataTypes.STRING,
 	},
-	Avatar: {
+	avatar: {
 		type: DataTypes.STRING,
 	},
-	CreatedAt: {
+	createdat: {
 		type: DataTypes.DATE,
 	},
-	Subscribers: {
+	supporters: {
 		type: DataTypes.JSON,
 	},
-	Subscribed: {
+	members: {
 		type: DataTypes.JSON,
 	},
-	Members: {
-		type: DataTypes.JSON,
-	},
-	Badges: {
+	badges: {
 		type: DataTypes.JSON,
 	},
 };
