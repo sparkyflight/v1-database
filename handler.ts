@@ -702,7 +702,9 @@ class Teams extends Model implements TeamsTypings {
 		const doc = await Teams.findOne({
 			where: data,
 		});
-		return doc;
+
+		if (!doc) return null;
+		else return doc;
 	}
 
 	static async find(data: any): Promise<TeamsTypings[]> {
