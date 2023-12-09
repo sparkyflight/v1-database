@@ -2,13 +2,22 @@ interface PostsTypings {
 	userid: string;
 	caption: string;
 	image: string;
-	plugins: any[];
+	plugins: {
+		type: string;
+		url: string;
+	}[];
 	type: number;
 	createdat: Date;
 	postid: string;
 	upvotes: string[];
 	downvotes: string[];
-	comments: any[];
+	comments: {
+		user: UsersTypings | TeamsTypings;
+		comment: {
+			caption: string;
+			image: string;
+		};
+	}[];
 }
 
 interface TeamsTypings {
@@ -19,7 +28,11 @@ interface TeamsTypings {
 	avatar: string;
 	createdat: Date;
 	supporters: string[];
-	members: any[];
+	members: {
+		id: string;
+		roles: string[];
+		memberaddedat: Date;
+	}[];
 	badges: string[];
 }
 
@@ -43,4 +56,4 @@ interface UsersTypings {
 	coins: number;
 }
 
-export { PostsTypings, TeamsTypings, TokensTypings, UsersTypings };
+export type { PostsTypings, TeamsTypings, TokensTypings, UsersTypings };
