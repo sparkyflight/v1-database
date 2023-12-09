@@ -333,13 +333,16 @@ class Posts extends Model implements PostsTypings {
 	userid: string;
 	caption: string;
 	image: string;
-	plugins: any[];
+	plugins: { type: string; url: string }[];
 	type: number;
 	createdat: Date;
 	postid: string;
 	upvotes: string[];
 	downvotes: string[];
-	comments: any[];
+	comments: {
+		user: UsersTypings | TeamsTypings;
+		comment: { caption: string; image: string };
+	}[];
 
 	static async createPost(
 		userid: string,
@@ -375,7 +378,7 @@ class Posts extends Model implements PostsTypings {
 			},
 		});
 
-		let Comments: object[] = [];
+		let Comments: PostsTypings["comments"] = [];
 
 		if (post) {
 			let user = await Users.get({ userid: post.userid });
@@ -389,15 +392,11 @@ class Posts extends Model implements PostsTypings {
 			if (user) {
 				for (const comment of post.comments) {
 					let user = await Users.get({
-						UserID: comment.userid,
+						userid: comment.user.userid,
 					});
 
-					if (user) {
-						Comments.push({
-							comment: comment,
-							user: user,
-						});
-					} else continue;
+					if (user) Comments.push(comment);
+					else continue;
 				}
 
 				post.comments = Comments;
@@ -432,7 +431,7 @@ class Posts extends Model implements PostsTypings {
 		});
 
 		for (const post of docs) {
-			let Comments: object[] = [];
+			let Comments: PostsTypings["comments"] = [];
 
 			let user = {
 				data: await Users.get({ userid: post.userid }),
@@ -446,15 +445,11 @@ class Posts extends Model implements PostsTypings {
 
 			for (const comment of post.comments) {
 				let user = await Users.get({
-					UserID: comment.userid,
+					userid: comment.user.userid,
 				});
 
-				if (user) {
-					Comments.push({
-						comment: comment,
-						user: user,
-					});
-				} else continue;
+				if (user) Comments.push(comment);
+				else continue;
 			}
 
 			if (!user.data && !team.data) continue;
@@ -480,7 +475,7 @@ class Posts extends Model implements PostsTypings {
 		});
 
 		for (let post of docs) {
-			let Comments: object[] = [];
+			let Comments: PostsTypings["comments"] = [];
 
 			let user = {
 				data: await Users.get({ userid: post.userid }),
@@ -494,15 +489,11 @@ class Posts extends Model implements PostsTypings {
 
 			for (const comment of post.comments) {
 				let user = await Users.get({
-					userid: comment.userid,
+					userid: comment.user.userid,
 				});
 
-				if (user) {
-					Comments.push({
-						comment: comment,
-						user: user,
-					});
-				} else continue;
+				if (user) Comments.push(comment);
+				else continue;
 			}
 
 			if (!user.data && !team.data) continue;
@@ -537,15 +528,15 @@ class Posts extends Model implements PostsTypings {
 	static async getAllUserPosts(
 		UserID: string,
 		Type: string
-	): Promise<object[]> {
-		let posts: object[] = [];
+	): Promise<PostsTypings[]> {
+		let posts: PostsTypings[] = [];
 
 		const docs = await Posts.findAll({
 			where: { userid: UserID, type: Type },
 		});
 
 		for (let post of docs) {
-			let Comments: object[] = [];
+			let Comments: PostsTypings["comments"] = [];
 
 			let user = {
 				data: await Users.get({ userid: post.userid }),
@@ -559,15 +550,11 @@ class Posts extends Model implements PostsTypings {
 
 			for (const comment of post.comments) {
 				let user = await Users.get({
-					userid: comment.userid,
+					userid: comment.user.userid,
 				});
 
-				if (user) {
-					Comments.push({
-						comment: comment,
-						user: user,
-					});
-				} else continue;
+				if (user) Comments.push(comment);
+				else continue;
 			}
 
 			if (!user.data && !team.data) continue;
@@ -630,21 +617,28 @@ class Posts extends Model implements PostsTypings {
 	}
 
 	static async comment(
-		PostID: string,
-		UserID: string,
-		Caption: string
+		Post: PostsTypings,
+		User: UsersTypings,
+		Caption: string,
+		Image: string
 	): Promise<boolean | Error> {
 		try {
-			const result = await Posts.updatePost(PostID, {
-				comments: {
-					UserID: UserID,
-					CommentID: crypto.randomUUID(),
-					Caption: Caption,
-					Upvotes: [],
-					Downvotes: [],
-				},
-			});
-			return result;
+			const post = await Posts.get(Post.postid);
+
+			if (post) {
+				post.comments.push({
+					user: User,
+					comment: {
+						caption: Caption,
+						image: Image,
+					},
+				});
+
+				const result = await Posts.updatePost(Post.postid, {
+					comments: post.comments,
+				});
+				return result;
+			} else return false;
 		} catch (err) {
 			return err;
 		}
@@ -663,7 +657,7 @@ class Teams extends Model implements TeamsTypings {
 	avatar: string;
 	createdat: Date;
 	supporters: string[];
-	members: any[];
+	members: { id: string; roles: string[]; memberaddedat: Date }[];
 	badges: string[];
 
 	static async createTeam(
@@ -927,7 +921,7 @@ class Teams extends Model implements TeamsTypings {
 			const db = await Teams.findAll();
 
 			db.forEach((team) => {
-				const i = team.members.find((i) => i.ID === UserID);
+				const i = team.members.find((i) => i.id === UserID);
 
 				if (i) data.push(team);
 				else return;
