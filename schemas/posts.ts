@@ -34,6 +34,6 @@ const Post = {
 };
 
 export default {
-	name: "posts",
+	name: "onlyfoodz_posts",
 	schema: Post,
 };
