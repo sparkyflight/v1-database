@@ -1,3 +1,3 @@
-# database
+# Database (submodule)
 
-Official database submodule for NightmareBot
+Hello, there. This Github Repository is a internal submodule that allows our services to access our database and caching system.
