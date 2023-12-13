@@ -962,4 +962,6 @@ const init = () => {
 setTimeout(() => init(), 2000);
 
 // Export the classes
-export { Users, Tokens, Posts, Teams };
+export { 
+	onlyfoodz: { Users, Tokens, Posts, Teams }
+};
