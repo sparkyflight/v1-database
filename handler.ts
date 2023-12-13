@@ -17,7 +17,7 @@ const sequelize = new Sequelize({
 	host: process.env.ENV === "production" ? "0.0.0.0" : "100.65.43.129",
 	username: "select",
 	password: "password",
-	database: "onlyfoodz",
+	database: "sparkyflight",
 	logging: (r) => {
 		return console.log(r);
 	},
@@ -325,11 +325,11 @@ class Tokens extends Model implements TokensTypings {
 	}
 }
 
-// Posts
+// Posts (Onlyfoodz)
 @Table({
-	tableName: "posts",
+	tableName: "onlyfoodz_posts",
 })
-class Posts extends Model implements PostsTypings {
+class OnlyfoodzPosts extends Model implements PostsTypings {
 	userid: string;
 	caption: string;
 	image: string;
@@ -645,295 +645,6 @@ class Posts extends Model implements PostsTypings {
 	}
 }
 
-// Teams
-@Table({
-	tableName: "teams",
-})
-class Teams extends Model implements TeamsTypings {
-	name: string;
-	userid: string;
-	usertag: string;
-	bio: string;
-	avatar: string;
-	createdat: Date;
-	supporters: string[];
-	members: { id: string; roles: string[]; memberaddedat: Date }[];
-	badges: string[];
-
-	static async createTeam(
-		name: string,
-		userid: string,
-		usertag: string,
-		bio: string,
-		avatar: string,
-		creatorid: string
-	): Promise<boolean | Error> {
-		try {
-			await Teams.create({
-				name,
-				userid,
-				usertag,
-				bio,
-				avatar,
-				createdat: new Date(),
-				supporters: [],
-				members: [
-					{
-						id: creatorid,
-						roles: ["OWNER"],
-						memberaddedat: new Date(),
-					},
-				],
-			});
-
-			return true;
-		} catch (err) {
-			return err;
-		}
-	}
-
-	static async get(data: any): Promise<TeamsTypings | null> {
-		const doc = await Teams.findOne({
-			where: data,
-		});
-
-		if (!doc) return null;
-		else return doc;
-	}
-
-	static async find(data: any): Promise<TeamsTypings[]> {
-		const docs = await Teams.findAll({
-			where: data,
-		});
-
-		return docs.map((t) => {
-			t["members"] = t["members"].map((member) => {
-				return {
-					id: member.id,
-					roles: member.roles,
-					memberaddedat: member.memberaddedat,
-				};
-			});
-			t["supporters"] = [];
-			return t;
-		});
-	}
-
-	static async updateTeam(
-		id: string,
-		data: object
-	): Promise<boolean | Error> {
-		try {
-			await Teams.update(data, {
-				where: {
-					userid: id,
-				},
-			});
-			return true;
-		} catch (err) {
-			return err;
-		}
-	}
-
-	static async delete(data: any): Promise<boolean | Error> {
-		try {
-			await Teams.destroy({
-				where: data,
-			});
-
-			return true;
-		} catch (err) {
-			return err;
-		}
-	}
-
-	static async support(
-		UserID: string,
-		TeamID: string
-	): Promise<boolean | Error> {
-		try {
-			const user = await Users.findOne({
-				where: {
-					userid: UserID,
-				},
-			});
-
-			const target = await Teams.findOne({
-				where: {
-					userid: TeamID,
-				},
-			});
-
-			let subscribed = user.subscribed;
-			subscribed.push(TeamID);
-
-			let supporters = target.supporters;
-			supporters.push(UserID);
-
-			await Teams.update(
-				{
-					supporters: supporters,
-				},
-				{
-					where: {
-						userid: TeamID,
-					},
-				}
-			);
-
-			await Users.update(
-				{
-					subscribed: subscribed,
-				},
-				{
-					where: {
-						userid: UserID,
-					},
-				}
-			);
-
-			return true;
-		} catch (err) {
-			return err;
-		}
-	}
-
-	static async unsupport(
-		UserID: string,
-		TeamID: string
-	): Promise<boolean | Error> {
-		try {
-			const user = await Users.findOne({
-				where: {
-					userid: UserID,
-				},
-			});
-
-			const target = await Teams.findOne({
-				where: {
-					userid: TeamID,
-				},
-			});
-
-			let subscribed = user.subscribed;
-			delete subscribed[subscribed.findIndex((p) => p === TeamID)];
-
-			let supporters = target.supporters;
-			delete supporters[supporters.findIndex((p) => p === UserID)];
-
-			await Teams.update(
-				{
-					supporters: supporters,
-				},
-				{
-					where: {
-						userid: TeamID,
-					},
-				}
-			);
-
-			await Users.update(
-				{
-					subscribed: subscribed,
-				},
-				{
-					where: {
-						userid: UserID,
-					},
-				}
-			);
-
-			return true;
-		} catch (err) {
-			return err;
-		}
-	}
-
-	/*static async invite(
-		TeamID: string,
-		UserID: string
-	): Promise<boolean | Error> {
-		try {
-			await schemas["team"].updateOne(
-				{ UserID: TeamID },
-				{
-					$push: {
-						Members: {
-							ID: UserID,
-							Roles: ["MEMBER"],
-							MemberAddedAt: new Date(),
-						},
-					},
-				}
-			);
-
-			await schemas["user"].updateOne(
-				{ UserID: UserID },
-				{
-					$push: {
-						Teams: TeamID,
-					},
-				}
-			);
-
-			return true;
-		} catch (err) {
-			return err;
-		}
-	}
-
-	static async kick(
-		TeamID: string,
-		UserID: string
-	): Promise<boolean | Error> {
-		try {
-			await schemas["team"].updateOne(
-				{ UserID: TeamID },
-				{
-					$pull: {
-						Members: {
-							ID: UserID,
-						},
-					},
-				}
-			);
-
-			await schemas["user"].updateOne(
-				{ UserID: UserID },
-				{
-					$pull: {
-						Teams: TeamID,
-					},
-				}
-			);
-
-			return true;
-		} catch (err) {
-			return err;
-		}
-	}*/
-
-	static async listUsersTeams(
-		UserID: string
-	): Promise<TeamsTypings[] | Error> {
-		try {
-			let data = [];
-			const db = await Teams.findAll();
-
-			db.forEach((team) => {
-				const i = team.members.find((i) => i.id === UserID);
-
-				if (i) data.push(team);
-				else return;
-			});
-
-			return data;
-		} catch (error) {
-			return error;
-		}
-	}
-}
-
 const init = () => {
 	sequelize.addModels([Users, Tokens, Teams, Posts]);
 
@@ -947,14 +658,9 @@ const init = () => {
 		modelName: schemaData["tokens"].name,
 	});
 
-	Teams.init(schemaData["teams"].schema, {
+	OnlyfoodzPosts.init(schemaData["onlyfoodz_posts"].schema, {
 		sequelize: sequelize,
-		modelName: schemaData["teams"].name,
-	});
-
-	Posts.init(schemaData["posts"].schema, {
-		sequelize: sequelize,
-		modelName: schemaData["posts"].name,
+		modelName: schemaData["onlyfoodz_posts"].name,
 	});
 
 	sequelize.sync();
@@ -963,5 +669,5 @@ setTimeout(() => init(), 2000);
 
 // Export the classes
 export { 
-	onlyfoodz: { Users, Tokens, Posts, Teams }
+	Users, Tokens, OnlyfoodzPosts
 };
