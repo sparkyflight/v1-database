@@ -3,12 +3,7 @@ import { Sequelize, Model, Table } from "sequelize-typescript";
 import { info, error } from "./logger.js";
 import fs from "fs";
 import "dotenv/config";
-import {
-	PostsTypings,
-	UsersTypings,
-	TokensTypings,
-	TeamsTypings,
-} from "./types.interface.js";
+import { OnlyfoodzPost, User, Token } from "./types.interface.js";
 import crypto from "crypto";
 
 // Connect to PostgreSQL
@@ -52,7 +47,7 @@ for (const fileName of schemaFiles) {
 @Table({
 	tableName: "users",
 })
-class Users extends Model implements UsersTypings {
+class Users extends Model implements User {
 	name: string;
 	userid: string;
 	usertag: string;
@@ -91,7 +86,7 @@ class Users extends Model implements UsersTypings {
 		}
 	}
 
-	static async get(data: any): Promise<UsersTypings | null> {
+	static async get(data: any): Promise<User | null> {
 		const doc = await Users.findOne({
 			where: data,
 		});
@@ -100,7 +95,7 @@ class Users extends Model implements UsersTypings {
 		else return doc;
 	}
 
-	static async find(data: any): Promise<UsersTypings[]> {
+	static async find(data: any): Promise<User[]> {
 		const docs = await Users.findAll({
 			where: data,
 		});
@@ -244,7 +239,7 @@ class Users extends Model implements UsersTypings {
 @Table({
 	tableName: "tokens",
 })
-class Tokens extends Model implements TokensTypings {
+class Tokens extends Model implements Token {
 	userid: string;
 	createdat: Date;
 	token: string;
@@ -329,7 +324,7 @@ class Tokens extends Model implements TokensTypings {
 @Table({
 	tableName: "onlyfoodz_posts",
 })
-class OnlyfoodzPosts extends Model implements PostsTypings {
+class OnlyfoodzPosts extends Model implements OnlyfoodzPost {
 	userid: string;
 	caption: string;
 	image: string;
@@ -340,7 +335,7 @@ class OnlyfoodzPosts extends Model implements PostsTypings {
 	upvotes: string[];
 	downvotes: string[];
 	comments: {
-		user: UsersTypings | TeamsTypings;
+		user: User;
 		comment: { caption: string; image: string };
 	}[];
 
@@ -352,7 +347,7 @@ class OnlyfoodzPosts extends Model implements PostsTypings {
 		type: number
 	): Promise<boolean | Error> {
 		try {
-			await Posts.create({
+			await OnlyfoodzPosts.create({
 				userid,
 				caption,
 				image,
@@ -372,22 +367,16 @@ class OnlyfoodzPosts extends Model implements PostsTypings {
 	}
 
 	static async get(PostID: string): Promise<any | Error> {
-		let post = await Posts.findOne({
+		let post = await OnlyfoodzPosts.findOne({
 			where: {
 				postid: PostID,
 			},
 		});
 
-		let Comments: PostsTypings["comments"] = [];
+		let Comments: OnlyfoodzPost["comments"] = [];
 
 		if (post) {
 			let user = await Users.get({ userid: post.userid });
-			let team = false;
-
-			if (!user) {
-				user = await Users.get({ userid: post.userid });
-				if (user) team = true;
-			}
 
 			if (user) {
 				for (const comment of post.comments) {
@@ -404,7 +393,6 @@ class OnlyfoodzPosts extends Model implements PostsTypings {
 				let data = {
 					user: user,
 					post: post,
-					team: team,
 				};
 
 				return data;
@@ -423,7 +411,7 @@ class OnlyfoodzPosts extends Model implements PostsTypings {
 	static async find(data: object, type: string): Promise<object[]> {
 		let posts: object[] = [];
 
-		const docs = await Posts.findAll({
+		const docs = await OnlyfoodzPosts.findAll({
 			where: {
 				...data,
 				type: type,
@@ -431,17 +419,9 @@ class OnlyfoodzPosts extends Model implements PostsTypings {
 		});
 
 		for (const post of docs) {
-			let Comments: PostsTypings["comments"] = [];
+			let Comments: OnlyfoodzPost["comments"] = [];
 
-			let user = {
-				data: await Users.get({ userid: post.userid }),
-				team: false,
-			};
-
-			let team = {
-				data: await Teams.get({ userid: post.userid }),
-				team: true,
-			};
+			let user = await Users.get({ userid: post.userid });
 
 			for (const comment of post.comments) {
 				let user = await Users.get({
@@ -452,14 +432,13 @@ class OnlyfoodzPosts extends Model implements PostsTypings {
 				else continue;
 			}
 
-			if (!user.data && !team.data) continue;
+			if (!user) continue;
 			else {
 				post.comments = Comments;
 
 				posts.push({
 					post: post,
-					user: user.data === null ? team.data : user.data,
-					team: user.data === null ? true : false,
+					user: user,
 				});
 			}
 		}
@@ -470,22 +449,14 @@ class OnlyfoodzPosts extends Model implements PostsTypings {
 	static async listAllPosts(type: string): Promise<object[]> {
 		let posts: object[] = [];
 
-		const docs = await Posts.findAll({
+		const docs = await OnlyfoodzPosts.findAll({
 			type: type,
 		});
 
 		for (let post of docs) {
-			let Comments: PostsTypings["comments"] = [];
+			let Comments: OnlyfoodzPost["comments"] = [];
 
-			let user = {
-				data: await Users.get({ userid: post.userid }),
-				team: false,
-			};
-
-			let team = {
-				data: await Teams.get({ userid: post.userid }),
-				team: true,
-			};
+			let user = await Users.get({ userid: post.userid });
 
 			for (const comment of post.comments) {
 				let user = await Users.get({
@@ -496,14 +467,13 @@ class OnlyfoodzPosts extends Model implements PostsTypings {
 				else continue;
 			}
 
-			if (!user.data && !team.data) continue;
+			if (!user) continue;
 			else {
 				post.comments = Comments;
 
 				posts.push({
 					post: post,
-					user: user.data === null ? team.data : user.data,
-					team: user.data === null ? true : false,
+					user: user,
 				});
 			}
 		}
@@ -513,7 +483,7 @@ class OnlyfoodzPosts extends Model implements PostsTypings {
 
 	static async updatePost(id: string, data: any): Promise<boolean | Error> {
 		try {
-			await Posts.update(data, {
+			await OnlyfoodzPosts.update(data, {
 				where: {
 					postid: id,
 				},
@@ -528,25 +498,17 @@ class OnlyfoodzPosts extends Model implements PostsTypings {
 	static async getAllUserPosts(
 		UserID: string,
 		Type: string
-	): Promise<PostsTypings[]> {
-		let posts: PostsTypings[] = [];
+	): Promise<OnlyfoodzPost[]> {
+		let posts: OnlyfoodzPost[] = [];
 
-		const docs = await Posts.findAll({
+		const docs = await OnlyfoodzPosts.findAll({
 			where: { userid: UserID, type: Type },
 		});
 
 		for (let post of docs) {
-			let Comments: PostsTypings["comments"] = [];
+			let Comments: OnlyfoodzPost["comments"] = [];
 
-			let user = {
-				data: await Users.get({ userid: post.userid }),
-				team: false,
-			};
-
-			let team = {
-				data: await Teams.get({ userid: post.userid }),
-				team: true,
-			};
+			let user = await Users.get({ userid: post.userid });
 
 			for (const comment of post.comments) {
 				let user = await Users.get({
@@ -557,7 +519,7 @@ class OnlyfoodzPosts extends Model implements PostsTypings {
 				else continue;
 			}
 
-			if (!user.data && !team.data) continue;
+			if (!user) continue;
 			else {
 				post.comments = Comments;
 
@@ -570,7 +532,7 @@ class OnlyfoodzPosts extends Model implements PostsTypings {
 
 	static async delete(PostID: string): Promise<boolean | Error> {
 		try {
-			await Posts.destroy({
+			await OnlyfoodzPosts.destroy({
 				where: {
 					postid: PostID,
 				},
@@ -587,10 +549,10 @@ class OnlyfoodzPosts extends Model implements PostsTypings {
 		UserID: string
 	): Promise<boolean | Error> {
 		try {
-			const post = await Posts.get(PostID);
+			const post = await OnlyfoodzPosts.get(PostID);
 			post.upvotes.push(UserID);
 
-			const result = await Posts.updatePost(PostID, {
+			const result = await OnlyfoodzPosts.updatePost(PostID, {
 				upvotes: post.upvotes,
 			});
 			return result;
@@ -604,10 +566,10 @@ class OnlyfoodzPosts extends Model implements PostsTypings {
 		UserID: string
 	): Promise<boolean | Error> {
 		try {
-			const post = await Posts.get(PostID);
+			const post = await OnlyfoodzPosts.get(PostID);
 			post.downvotes.push(UserID);
 
-			const result = await Posts.updatePost(PostID, {
+			const result = await OnlyfoodzPosts.updatePost(PostID, {
 				downvotes: post.downvotes,
 			});
 			return result;
@@ -617,13 +579,13 @@ class OnlyfoodzPosts extends Model implements PostsTypings {
 	}
 
 	static async comment(
-		Post: PostsTypings,
-		User: UsersTypings,
+		Post: OnlyfoodzPost,
+		User: User,
 		Caption: string,
 		Image: string
 	): Promise<boolean | Error> {
 		try {
-			const post = await Posts.get(Post.postid);
+			const post = await OnlyfoodzPosts.get(Post.postid);
 
 			if (post) {
 				post.comments.push({
@@ -634,7 +596,7 @@ class OnlyfoodzPosts extends Model implements PostsTypings {
 					},
 				});
 
-				const result = await Posts.updatePost(Post.postid, {
+				const result = await OnlyfoodzPosts.updatePost(Post.postid, {
 					comments: post.comments,
 				});
 				return result;
@@ -646,7 +608,7 @@ class OnlyfoodzPosts extends Model implements PostsTypings {
 }
 
 const init = () => {
-	sequelize.addModels([Users, Tokens, Teams, Posts]);
+	sequelize.addModels([Users, Tokens, OnlyfoodzPosts]);
 
 	Users.init(schemaData["users"].schema, {
 		sequelize: sequelize,
@@ -668,6 +630,4 @@ const init = () => {
 setTimeout(() => init(), 2000);
 
 // Export the classes
-export { 
-	Users, Tokens, OnlyfoodzPosts
-};
+export { Users, Tokens, OnlyfoodzPosts };

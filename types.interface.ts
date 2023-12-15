@@ -1,4 +1,4 @@
-interface PostsTypings {
+interface OnlyfoodzPost {
 	userid: string;
 	caption: string;
 	image: string;
@@ -12,7 +12,7 @@ interface PostsTypings {
 	upvotes: string[];
 	downvotes: string[];
 	comments: {
-		user: UsersTypings | TeamsTypings;
+		user: User;
 		comment: {
 			caption: string;
 			image: string;
@@ -20,30 +20,14 @@ interface PostsTypings {
 	}[];
 }
 
-interface TeamsTypings {
-	name: string;
-	userid: string;
-	usertag: string;
-	bio: string;
-	avatar: string;
-	createdat: Date;
-	supporters: string[];
-	members: {
-		id: string;
-		roles: string[];
-		memberaddedat: Date;
-	}[];
-	badges: string[];
-}
-
-interface TokensTypings {
+interface Token {
 	userid: string;
 	createdat: Date;
 	token: string;
 	method: string;
 }
 
-interface UsersTypings {
+interface User {
 	name: string;
 	userid: string;
 	usertag: string;
@@ -56,4 +40,4 @@ interface UsersTypings {
 	coins: number;
 }
 
-export type { PostsTypings, TeamsTypings, TokensTypings, UsersTypings };
+export type { OnlyfoodzPost, Token, User };
