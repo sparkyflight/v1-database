@@ -3,7 +3,7 @@ import { Sequelize, Model, Table } from "sequelize-typescript";
 import { info, error } from "./logger.js";
 import fs from "fs";
 import "dotenv/config";
-import { OnlyfoodzPost, User, Token } from "./types.interface.js";
+import { OnlyfoodzPost, User } from "./types.interface.js";
 import crypto from "crypto";
 
 // Connect to PostgreSQL
@@ -48,6 +48,7 @@ for (const fileName of schemaFiles) {
 	tableName: "users",
 })
 class Users extends Model implements User {
+	id: number;
 	name: string;
 	userid: string;
 	usertag: string;
@@ -68,11 +69,11 @@ class Users extends Model implements User {
 	): Promise<boolean | Error> {
 		try {
 			await Users.create({
-				name,
-				userid,
-				usertag,
-				bio,
-				avatar,
+				name: name,
+				userid: userid,
+				usertag: usertag,
+				bio: bio,
+				avatar: avatar,
 				createdat: new Date(),
 				subscribers: [],
 				subscribed: [],
@@ -227,91 +228,6 @@ class Users extends Model implements User {
 					},
 				}
 			);
-
-			return true;
-		} catch (err) {
-			return err;
-		}
-	}
-}
-
-// Tokens
-@Table({
-	tableName: "tokens",
-})
-class Tokens extends Model implements Token {
-	userid: string;
-	createdat: Date;
-	token: string;
-	method: string;
-
-	static async createToken(
-		userid: string,
-		token: string,
-		method: string
-	): Promise<boolean | Error> {
-		try {
-			await Tokens.create({
-				userid,
-				createdat: new Date(),
-				token,
-				method,
-			});
-
-			return true;
-		} catch (err) {
-			return err;
-		}
-	}
-
-	static async get(token: string): Promise<object | Error> {
-		const tokenData = await Tokens.findOne({
-			where: {
-				token: token,
-			},
-		});
-
-		if (tokenData) {
-			const user = await Tokens.findOne({
-				where: {
-					userid: tokenData.userid,
-				},
-			});
-
-			if (user) {
-				user["token"] = token;
-				return user;
-			} else {
-				return {
-					error: "That user does not exist!",
-				};
-			}
-		} else {
-			return {
-				error: "The specified token is invalid.",
-			};
-		}
-	}
-
-	static async getAllUserTokens(userid: string): Promise<object[] | Error> {
-		try {
-			const doc = await Tokens.findAll({
-				where: {
-					userid: userid,
-				},
-			});
-
-			return doc;
-		} catch (error) {
-			return error;
-		}
-	}
-
-	static async delete(data: any): Promise<boolean | Error> {
-		try {
-			await Tokens.destroy({
-				where: data,
-			});
 
 			return true;
 		} catch (err) {
@@ -608,16 +524,11 @@ class OnlyfoodzPosts extends Model implements OnlyfoodzPost {
 }
 
 const init = () => {
-	sequelize.addModels([Users, Tokens, OnlyfoodzPosts]);
+	sequelize.addModels([Users, OnlyfoodzPosts]);
 
 	Users.init(schemaData["users"].schema, {
 		sequelize: sequelize,
 		modelName: schemaData["users"].name,
-	});
-
-	Tokens.init(schemaData["tokens"].schema, {
-		sequelize: sequelize,
-		modelName: schemaData["tokens"].name,
 	});
 
 	OnlyfoodzPosts.init(schemaData["onlyfoodz_posts"].schema, {
@@ -625,9 +536,9 @@ const init = () => {
 		modelName: schemaData["onlyfoodz_posts"].name,
 	});
 
-	sequelize.sync();
+	sequelize.sync({ alter: true });
 };
 setTimeout(() => init(), 2000);
 
 // Export the classes
-export { Users, Tokens, OnlyfoodzPosts };
+export { Users, OnlyfoodzPosts };

@@ -23,10 +23,10 @@ const Post = {
 		type: DataTypes.STRING,
 	},
 	upvotes: {
-		type: DataTypes.JSON,
+		type: "text[]",
 	},
 	downvotes: {
-		type: DataTypes.JSON,
+		type: "text[]",
 	},
 	comments: {
 		type: DataTypes.JSON,

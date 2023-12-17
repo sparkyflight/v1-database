@@ -20,14 +20,8 @@ interface OnlyfoodzPost {
 	}[];
 }
 
-interface Token {
-	userid: string;
-	createdat: Date;
-	token: string;
-	method: string;
-}
-
 interface User {
+	id: number;
 	name: string;
 	userid: string;
 	usertag: string;
@@ -40,4 +34,4 @@ interface User {
 	coins: number;
 }
 
-export type { OnlyfoodzPost, Token, User };
+export type { OnlyfoodzPost, User };

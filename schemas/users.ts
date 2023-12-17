@@ -1,6 +1,11 @@
 import { DataTypes } from "sequelize";
 
 const User = {
+	id: {
+		type: DataTypes.INTEGER,
+		autoIncrement: true,
+		primaryKey: true,
+	},
 	name: {
 		type: DataTypes.STRING,
 	},
@@ -20,13 +25,13 @@ const User = {
 		type: DataTypes.DATE,
 	},
 	subscribers: {
-		type: DataTypes.JSON,
+		type: "text[]",
 	},
 	subscribed: {
-		type: DataTypes.JSON,
+		type: "text[]",
 	},
 	badges: {
-		type: DataTypes.JSON,
+		type: "text[]",
 	},
 	coins: {
 		type: DataTypes.INTEGER,
