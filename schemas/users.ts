@@ -25,13 +25,13 @@ const User = {
 		type: DataTypes.DATE,
 	},
 	subscribers: {
-		type: "text[]",
+		type: DataTypes.JSON,
 	},
 	subscribed: {
-		type: "text[]",
+		type: DataTypes.JSON,
 	},
 	badges: {
-		type: "text[]",
+		type: DataTypes.JSON,
 	},
 	coins: {
 		type: DataTypes.INTEGER,

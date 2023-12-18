@@ -1,6 +1,11 @@
 import { DataTypes } from "sequelize";
 
 const Post = {
+	id: {
+		type: DataTypes.INTEGER,
+		autoIncrement: true,
+		primaryKey: true,
+	},
 	userid: {
 		type: DataTypes.STRING,
 	},
@@ -23,10 +28,10 @@ const Post = {
 		type: DataTypes.STRING,
 	},
 	upvotes: {
-		type: "text[]",
+		type: DataTypes.JSON,
 	},
 	downvotes: {
-		type: "text[]",
+		type: DataTypes.JSON,
 	},
 	comments: {
 		type: DataTypes.JSON,

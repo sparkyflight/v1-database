@@ -202,10 +202,10 @@ class Users extends Model implements User {
 			});
 
 			let subscribed = user.subscribed;
-			delete subscribed[subscribed.findIndex((p) => p === Target)];
+			subscribed = subscribed.filter((p) => p !== Target);
 
 			let subscribers = target.subscribers;
-			delete subscribers[subscribers.findIndex((p) => p === UserID)];
+			subscribers = subscribers.filter((p) => p !== UserID);
 
 			await Users.update(
 				{
@@ -259,16 +259,16 @@ class OnlyfoodzPosts extends Model implements OnlyfoodzPost {
 		userid: string,
 		caption: string,
 		image: string,
-		plugins: any,
+		plugins: OnlyfoodzPost["plugins"],
 		type: number
 	): Promise<boolean | Error> {
 		try {
 			await OnlyfoodzPosts.create({
-				userid,
-				caption,
-				image,
-				plugins,
-				type,
+				userid: userid,
+				caption: caption,
+				image: image,
+				plugins: plugins,
+				type: type,
 				createdat: new Date(),
 				postid: crypto.randomUUID(),
 				upvotes: [],
@@ -465,11 +465,11 @@ class OnlyfoodzPosts extends Model implements OnlyfoodzPost {
 		UserID: string
 	): Promise<boolean | Error> {
 		try {
-			const post = await OnlyfoodzPosts.get(PostID);
-			post.upvotes.push(UserID);
+			let post = await OnlyfoodzPosts.get(PostID);
+			post.post.upvotes.push(UserID);
 
 			const result = await OnlyfoodzPosts.updatePost(PostID, {
-				upvotes: post.upvotes,
+				upvotes: post.post.upvotes,
 			});
 			return result;
 		} catch (err) {
@@ -482,11 +482,11 @@ class OnlyfoodzPosts extends Model implements OnlyfoodzPost {
 		UserID: string
 	): Promise<boolean | Error> {
 		try {
-			const post = await OnlyfoodzPosts.get(PostID);
-			post.downvotes.push(UserID);
+			let post = await OnlyfoodzPosts.get(PostID);
+			post.post.downvotes.append(UserID);
 
 			const result = await OnlyfoodzPosts.updatePost(PostID, {
-				downvotes: post.downvotes,
+				downvotes: post.post.downvotes,
 			});
 			return result;
 		} catch (err) {
@@ -536,7 +536,7 @@ const init = () => {
 		modelName: schemaData["onlyfoodz_posts"].name,
 	});
 
-	sequelize.sync({ alter: true });
+	sequelize.sync();
 };
 setTimeout(() => init(), 2000);
 
