@@ -28,8 +28,8 @@ interface User {
 	bio: string;
 	avatar: string;
 	createdat: Date;
-	subscribers: string[];
-	subscribed: string[];
+	followers: string[];
+	following: string[];
 	badges: string[];
 	coins: number;
 }

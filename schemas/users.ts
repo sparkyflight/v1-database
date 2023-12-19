@@ -24,10 +24,10 @@ const User = {
 	createdat: {
 		type: DataTypes.DATE,
 	},
-	subscribers: {
+	followers: {
 		type: DataTypes.JSON,
 	},
-	subscribed: {
+	following: {
 		type: DataTypes.JSON,
 	},
 	badges: {

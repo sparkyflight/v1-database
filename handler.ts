@@ -55,8 +55,8 @@ class Users extends Model implements User {
 	bio: string;
 	avatar: string;
 	createdat: Date;
-	subscribers: string[];
-	subscribed: string[];
+	followers: string[];
+	following: string[];
 	badges: string[];
 	coins: number;
 
@@ -75,8 +75,8 @@ class Users extends Model implements User {
 				bio: bio,
 				avatar: avatar,
 				createdat: new Date(),
-				subscribers: [],
-				subscribed: [],
+				followers: [],
+				following: [],
 				badges: [],
 				coins: 200,
 			});
@@ -150,15 +150,15 @@ class Users extends Model implements User {
 				},
 			});
 
-			let subscribed = user.subscribed;
-			subscribed.push(Target);
+			let following = user.following;
+			following.push(Target);
 
-			let subscribers = target.subscribers;
-			subscribers.push(UserID);
+			let followers = target.followers;
+			followers.push(UserID);
 
 			await Users.update(
 				{
-					subscribers: subscribers,
+					followers: followers,
 				},
 				{
 					where: {
@@ -169,7 +169,7 @@ class Users extends Model implements User {
 
 			await Users.update(
 				{
-					subscribed: subscribed,
+					following: following,
 				},
 				{
 					where: {
@@ -201,15 +201,15 @@ class Users extends Model implements User {
 				},
 			});
 
-			let subscribed = user.subscribed;
-			subscribed = subscribed.filter((p) => p !== Target);
+			let following = user.following;
+			following = following.filter((p) => p !== Target);
 
-			let subscribers = target.subscribers;
-			subscribers = subscribers.filter((p) => p !== UserID);
+			let followers = target.followers;
+			followers = followers.filter((p) => p !== UserID);
 
 			await Users.update(
 				{
-					subscribers: subscribers,
+					followers: followers,
 				},
 				{
 					where: {
@@ -220,7 +220,7 @@ class Users extends Model implements User {
 
 			await Users.update(
 				{
-					subscribed: subscribed,
+					following: following,
 				},
 				{
 					where: {
