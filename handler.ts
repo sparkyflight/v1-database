@@ -1,7 +1,7 @@
 // Packages
 import { Sequelize, Model, Table } from "sequelize-typescript";
 import { info, error } from "./logger.js";
-import fs from "fs";
+import fs from "node:fs";
 import "dotenv/config";
 import { OnlyfoodzPost, User } from "./types.interface.js";
 import crypto from "crypto";
