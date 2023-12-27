@@ -1,9 +1,9 @@
 // Packages
 import { Sequelize, Model, Table } from "sequelize-typescript";
 import { info, error } from "./logger.js";
-import fs from "fs";
+import fs from "node:fs";
 import "dotenv/config";
-import { OnlyfoodzPost, User, Token } from "./types.interface.js";
+import { OnlyfoodzPost, User } from "./types.interface.js";
 import crypto from "crypto";
 
 // Connect to PostgreSQL
@@ -48,14 +48,15 @@ for (const fileName of schemaFiles) {
 	tableName: "users",
 })
 class Users extends Model implements User {
+	id: number;
 	name: string;
 	userid: string;
 	usertag: string;
 	bio: string;
 	avatar: string;
 	createdat: Date;
-	subscribers: string[];
-	subscribed: string[];
+	followers: string[];
+	following: string[];
 	badges: string[];
 	coins: number;
 
@@ -68,14 +69,14 @@ class Users extends Model implements User {
 	): Promise<boolean | Error> {
 		try {
 			await Users.create({
-				name,
-				userid,
-				usertag,
-				bio,
-				avatar,
+				name: name,
+				userid: userid,
+				usertag: usertag,
+				bio: bio,
+				avatar: avatar,
 				createdat: new Date(),
-				subscribers: [],
-				subscribed: [],
+				followers: [],
+				following: [],
 				badges: [],
 				coins: 200,
 			});
@@ -149,15 +150,15 @@ class Users extends Model implements User {
 				},
 			});
 
-			let subscribed = user.subscribed;
-			subscribed.push(Target);
+			let following = user.following;
+			following.push(Target);
 
-			let subscribers = target.subscribers;
-			subscribers.push(UserID);
+			let followers = target.followers;
+			followers.push(UserID);
 
 			await Users.update(
 				{
-					subscribers: subscribers,
+					followers: followers,
 				},
 				{
 					where: {
@@ -168,7 +169,7 @@ class Users extends Model implements User {
 
 			await Users.update(
 				{
-					subscribed: subscribed,
+					following: following,
 				},
 				{
 					where: {
@@ -200,15 +201,15 @@ class Users extends Model implements User {
 				},
 			});
 
-			let subscribed = user.subscribed;
-			delete subscribed[subscribed.findIndex((p) => p === Target)];
+			let following = user.following;
+			following = following.filter((p) => p !== Target);
 
-			let subscribers = target.subscribers;
-			delete subscribers[subscribers.findIndex((p) => p === UserID)];
+			let followers = target.followers;
+			followers = followers.filter((p) => p !== UserID);
 
 			await Users.update(
 				{
-					subscribers: subscribers,
+					followers: followers,
 				},
 				{
 					where: {
@@ -219,7 +220,7 @@ class Users extends Model implements User {
 
 			await Users.update(
 				{
-					subscribed: subscribed,
+					following: following,
 				},
 				{
 					where: {
@@ -227,91 +228,6 @@ class Users extends Model implements User {
 					},
 				}
 			);
-
-			return true;
-		} catch (err) {
-			return err;
-		}
-	}
-}
-
-// Tokens
-@Table({
-	tableName: "tokens",
-})
-class Tokens extends Model implements Token {
-	userid: string;
-	createdat: Date;
-	token: string;
-	method: string;
-
-	static async createToken(
-		userid: string,
-		token: string,
-		method: string
-	): Promise<boolean | Error> {
-		try {
-			await Tokens.create({
-				userid,
-				createdat: new Date(),
-				token,
-				method,
-			});
-
-			return true;
-		} catch (err) {
-			return err;
-		}
-	}
-
-	static async get(token: string): Promise<object | Error> {
-		const tokenData = await Tokens.findOne({
-			where: {
-				token: token,
-			},
-		});
-
-		if (tokenData) {
-			const user = await Tokens.findOne({
-				where: {
-					userid: tokenData.userid,
-				},
-			});
-
-			if (user) {
-				user["token"] = token;
-				return user;
-			} else {
-				return {
-					error: "That user does not exist!",
-				};
-			}
-		} else {
-			return {
-				error: "The specified token is invalid.",
-			};
-		}
-	}
-
-	static async getAllUserTokens(userid: string): Promise<object[] | Error> {
-		try {
-			const doc = await Tokens.findAll({
-				where: {
-					userid: userid,
-				},
-			});
-
-			return doc;
-		} catch (error) {
-			return error;
-		}
-	}
-
-	static async delete(data: any): Promise<boolean | Error> {
-		try {
-			await Tokens.destroy({
-				where: data,
-			});
 
 			return true;
 		} catch (err) {
@@ -343,16 +259,16 @@ class OnlyfoodzPosts extends Model implements OnlyfoodzPost {
 		userid: string,
 		caption: string,
 		image: string,
-		plugins: any,
+		plugins: OnlyfoodzPost["plugins"],
 		type: number
 	): Promise<boolean | Error> {
 		try {
 			await OnlyfoodzPosts.create({
-				userid,
-				caption,
-				image,
-				plugins,
-				type,
+				userid: userid,
+				caption: caption,
+				image: image,
+				plugins: plugins,
+				type: type,
 				createdat: new Date(),
 				postid: crypto.randomUUID(),
 				upvotes: [],
@@ -549,11 +465,11 @@ class OnlyfoodzPosts extends Model implements OnlyfoodzPost {
 		UserID: string
 	): Promise<boolean | Error> {
 		try {
-			const post = await OnlyfoodzPosts.get(PostID);
-			post.upvotes.push(UserID);
+			let post = await OnlyfoodzPosts.get(PostID);
+			post.post.upvotes.push(UserID);
 
 			const result = await OnlyfoodzPosts.updatePost(PostID, {
-				upvotes: post.upvotes,
+				upvotes: post.post.upvotes,
 			});
 			return result;
 		} catch (err) {
@@ -566,11 +482,11 @@ class OnlyfoodzPosts extends Model implements OnlyfoodzPost {
 		UserID: string
 	): Promise<boolean | Error> {
 		try {
-			const post = await OnlyfoodzPosts.get(PostID);
-			post.downvotes.push(UserID);
+			let post = await OnlyfoodzPosts.get(PostID);
+			post.post.downvotes.append(UserID);
 
 			const result = await OnlyfoodzPosts.updatePost(PostID, {
-				downvotes: post.downvotes,
+				downvotes: post.post.downvotes,
 			});
 			return result;
 		} catch (err) {
@@ -608,16 +524,11 @@ class OnlyfoodzPosts extends Model implements OnlyfoodzPost {
 }
 
 const init = () => {
-	sequelize.addModels([Users, Tokens, OnlyfoodzPosts]);
+	sequelize.addModels([Users, OnlyfoodzPosts]);
 
 	Users.init(schemaData["users"].schema, {
 		sequelize: sequelize,
 		modelName: schemaData["users"].name,
-	});
-
-	Tokens.init(schemaData["tokens"].schema, {
-		sequelize: sequelize,
-		modelName: schemaData["tokens"].name,
 	});
 
 	OnlyfoodzPosts.init(schemaData["onlyfoodz_posts"].schema, {
@@ -630,4 +541,4 @@ const init = () => {
 setTimeout(() => init(), 2000);
 
 // Export the classes
-export { Users, Tokens, OnlyfoodzPosts };
+export { Users, OnlyfoodzPosts };

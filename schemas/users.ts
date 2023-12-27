@@ -1,6 +1,11 @@
 import { DataTypes } from "sequelize";
 
 const User = {
+	id: {
+		type: DataTypes.INTEGER,
+		autoIncrement: true,
+		primaryKey: true,
+	},
 	name: {
 		type: DataTypes.STRING,
 	},
@@ -19,10 +24,10 @@ const User = {
 	createdat: {
 		type: DataTypes.DATE,
 	},
-	subscribers: {
+	followers: {
 		type: DataTypes.JSON,
 	},
-	subscribed: {
+	following: {
 		type: DataTypes.JSON,
 	},
 	badges: {

@@ -20,24 +20,18 @@ interface OnlyfoodzPost {
 	}[];
 }
 
-interface Token {
-	userid: string;
-	createdat: Date;
-	token: string;
-	method: string;
-}
-
 interface User {
+	id: number;
 	name: string;
 	userid: string;
 	usertag: string;
 	bio: string;
 	avatar: string;
 	createdat: Date;
-	subscribers: string[];
-	subscribed: string[];
+	followers: string[];
+	following: string[];
 	badges: string[];
 	coins: number;
 }
 
-export type { OnlyfoodzPost, Token, User };
+export type { OnlyfoodzPost, User };

@@ -1,6 +1,11 @@
 import { DataTypes } from "sequelize";
 
 const Post = {
+	id: {
+		type: DataTypes.INTEGER,
+		autoIncrement: true,
+		primaryKey: true,
+	},
 	userid: {
 		type: DataTypes.STRING,
 	},
