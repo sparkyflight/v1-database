@@ -18,14 +18,12 @@ const Post = {
 	plugins: {
 		type: DataTypes.JSON,
 	},
-	type: {
-		type: DataTypes.INTEGER,
-	},
 	createdat: {
 		type: DataTypes.DATE,
 	},
 	postid: {
 		type: DataTypes.STRING,
+		unique: true,
 	},
 	upvotes: {
 		type: DataTypes.JSON,

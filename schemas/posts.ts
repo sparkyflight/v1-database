@@ -1,46 +1,42 @@
 import { DataTypes } from "sequelize";
 
-const User = {
+const Post = {
 	id: {
 		type: DataTypes.INTEGER,
 		autoIncrement: true,
 		primaryKey: true,
 	},
-	name: {
-		type: DataTypes.STRING,
-	},
 	userid: {
 		type: DataTypes.STRING,
-		unique: true,
 	},
-	usertag: {
-		type: DataTypes.STRING,
-		unique: true,
-	},
-	bio: {
+	caption: {
 		type: DataTypes.STRING,
 	},
-	avatar: {
+	image: {
 		type: DataTypes.STRING,
+	},
+	plugins: {
+		type: DataTypes.JSON,
 	},
 	createdat: {
 		type: DataTypes.DATE,
 	},
-	followers: {
+	postid: {
+		type: DataTypes.STRING,
+		unique: true,
+	},
+	upvotes: {
 		type: DataTypes.JSON,
 	},
-	following: {
+	downvotes: {
 		type: DataTypes.JSON,
 	},
-	badges: {
+	comments: {
 		type: DataTypes.JSON,
-	},
-	coins: {
-		type: DataTypes.INTEGER,
 	},
 };
 
 export default {
-	name: "users",
-	schema: User,
+	name: "posts",
+	schema: Post,
 };

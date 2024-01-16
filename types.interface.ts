@@ -1,3 +1,24 @@
+interface Post {
+	userid: string;
+	caption: string;
+	image: string;
+	plugins: {
+		type: string;
+		url: string;
+	}[];
+	createdat: Date;
+	postid: string;
+	upvotes: string[];
+	downvotes: string[];
+	comments: {
+		user: User;
+		comment: {
+			caption: string;
+			image: string;
+		};
+	}[];
+}
+
 interface OnlyfoodzPost {
 	userid: string;
 	caption: string;
@@ -6,7 +27,6 @@ interface OnlyfoodzPost {
 		type: string;
 		url: string;
 	}[];
-	type: number;
 	createdat: Date;
 	postid: string;
 	upvotes: string[];
@@ -34,4 +54,15 @@ interface User {
 	coins: number;
 }
 
-export type { OnlyfoodzPost, User };
+interface Application {
+	id: number;
+	creatorid: string;
+	name: string;
+	logo: string;
+	token: string;
+	active: boolean;
+	permissions: string[];
+	createdat: Date;
+}
+
+export type { Post, OnlyfoodzPost, User, Application };

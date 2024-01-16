@@ -3,13 +3,13 @@ import { Sequelize, Model, Table } from "sequelize-typescript";
 import { info, error } from "./logger.js";
 import fs from "node:fs";
 import "dotenv/config";
-import { OnlyfoodzPost, User } from "./types.interface.js";
+import { Post, OnlyfoodzPost, Application, User } from "./types.interface.js";
 import crypto from "crypto";
 
 // Connect to PostgreSQL
 const sequelize = new Sequelize({
 	dialect: "postgres",
-	host: process.env.ENV === "production" ? "0.0.0.0" : "100.65.43.129",
+	host: "100.124.138.24",
 	username: "select",
 	password: "password",
 	database: "sparkyflight",
@@ -236,16 +236,15 @@ class Users extends Model implements User {
 	}
 }
 
-// Posts (Onlyfoodz)
+// Posts (Sparkyflight)
 @Table({
-	tableName: "onlyfoodz_posts",
+	tableName: "posts",
 })
-class OnlyfoodzPosts extends Model implements OnlyfoodzPost {
+class Posts extends Model implements Post {
 	userid: string;
 	caption: string;
 	image: string;
 	plugins: { type: string; url: string }[];
-	type: number;
 	createdat: Date;
 	postid: string;
 	upvotes: string[];
@@ -259,8 +258,281 @@ class OnlyfoodzPosts extends Model implements OnlyfoodzPost {
 		userid: string,
 		caption: string,
 		image: string,
-		plugins: OnlyfoodzPost["plugins"],
-		type: number
+		plugins: Post["plugins"]
+	): Promise<boolean | Error> {
+		try {
+			await Posts.create({
+				userid: userid,
+				caption: caption,
+				image: image,
+				plugins: plugins,
+				createdat: new Date(),
+				postid: crypto.randomUUID(),
+				upvotes: [],
+				downvotes: [],
+				comments: [],
+			});
+
+			return true;
+		} catch (err) {
+			return err;
+		}
+	}
+
+	static async get(PostID: string): Promise<any | Error> {
+		let post = await Posts.findOne({
+			where: {
+				postid: PostID,
+			},
+		});
+
+		let Comments: Post["comments"] = [];
+
+		if (post) {
+			let user = await Users.get({ userid: post.userid });
+
+			if (user) {
+				for (const comment of post.comments) {
+					let user = await Users.get({
+						userid: comment.user.userid,
+					});
+
+					if (user) Comments.push(comment);
+					else continue;
+				}
+
+				post.comments = Comments;
+
+				let data = {
+					user: user,
+					post: post,
+				};
+
+				return data;
+			} else {
+				return null;
+			}
+		} else {
+			return null;
+		}
+	}
+
+	static async find(data: object): Promise<object[]> {
+		let posts: object[] = [];
+
+		const docs = await Posts.findAll({
+			where: {
+				...data,
+			},
+		});
+
+		for (const post of docs) {
+			let Comments: Post["comments"] = [];
+
+			let user = await Users.get({ userid: post.userid });
+
+			for (const comment of post.comments) {
+				let user = await Users.get({
+					userid: comment.user.userid,
+				});
+
+				if (user) Comments.push(comment);
+				else continue;
+			}
+
+			if (!user) continue;
+			else {
+				post.comments = Comments;
+
+				posts.push({
+					post: post,
+					user: user,
+				});
+			}
+		}
+
+		return posts;
+	}
+
+	static async listAllPosts(): Promise<object[]> {
+		let posts: object[] = [];
+
+		const docs = await Posts.findAll();
+
+		for (let post of docs) {
+			let Comments: Post["comments"] = [];
+
+			let user = await Users.get({ userid: post.userid });
+
+			for (const comment of post.comments) {
+				let user = await Users.get({
+					userid: comment.user.userid,
+				});
+
+				if (user) Comments.push(comment);
+				else continue;
+			}
+
+			if (!user) continue;
+			else {
+				post.comments = Comments;
+
+				posts.push({
+					post: post,
+					user: user,
+				});
+			}
+		}
+
+		return posts;
+	}
+
+	static async updatePost(id: string, data: any): Promise<boolean | Error> {
+		try {
+			await Posts.update(data, {
+				where: {
+					postid: id,
+				},
+			});
+
+			return true;
+		} catch (err) {
+			return err;
+		}
+	}
+
+	static async getAllUserPosts(UserID: string): Promise<Post[]> {
+		let posts: Post[] = [];
+
+		const docs = await Posts.findAll({
+			where: { userid: UserID },
+		});
+
+		for (let post of docs) {
+			let Comments: Post["comments"] = [];
+
+			let user = await Users.get({ userid: post.userid });
+
+			for (const comment of post.comments) {
+				let user = await Users.get({
+					userid: comment.user.userid,
+				});
+
+				if (user) Comments.push(comment);
+				else continue;
+			}
+
+			if (!user) continue;
+			else {
+				post.comments = Comments;
+
+				posts.push(post);
+			}
+		}
+
+		return posts;
+	}
+
+	static async delete(PostID: string): Promise<boolean | Error> {
+		try {
+			await Posts.destroy({
+				where: {
+					postid: PostID,
+				},
+			});
+
+			return true;
+		} catch (err) {
+			return err;
+		}
+	}
+
+	static async upvote(
+		PostID: string,
+		UserID: string
+	): Promise<boolean | Error> {
+		try {
+			let post = await Posts.get(PostID);
+			post.post.upvotes.push(UserID);
+
+			const result = await Posts.updatePost(PostID, {
+				upvotes: post.post.upvotes,
+			});
+			return result;
+		} catch (err) {
+			return err;
+		}
+	}
+
+	static async downvote(
+		PostID: string,
+		UserID: string
+	): Promise<boolean | Error> {
+		try {
+			let post = await Posts.get(PostID);
+			post.post.downvotes.push(UserID);
+
+			const result = await Posts.updatePost(PostID, {
+				downvotes: post.post.downvotes,
+			});
+			return result;
+		} catch (err) {
+			return err;
+		}
+	}
+
+	static async comment(
+		PostID: string,
+		User: User,
+		Caption: string,
+		Image: string
+	): Promise<boolean | Error> {
+		try {
+			let post = await Posts.get(PostID);
+
+			if (post) {
+				post.post.comments.push({
+					user: User,
+					comment: {
+						caption: Caption,
+						image: Image,
+					},
+				});
+
+				const result = await Posts.updatePost(PostID, {
+					comments: post.post.comments,
+				});
+				return result;
+			} else return false;
+		} catch (err) {
+			return err;
+		}
+	}
+}
+
+// Posts (Onlyfoodz)
+@Table({
+	tableName: "onlyfoodz_posts",
+})
+class OnlyfoodzPosts extends Model implements OnlyfoodzPost {
+	userid: string;
+	caption: string;
+	image: string;
+	plugins: { type: string; url: string }[];
+	createdat: Date;
+	postid: string;
+	upvotes: string[];
+	downvotes: string[];
+	comments: {
+		user: User;
+		comment: { caption: string; image: string };
+	}[];
+
+	static async createPost(
+		userid: string,
+		caption: string,
+		image: string,
+		plugins: OnlyfoodzPost["plugins"]
 	): Promise<boolean | Error> {
 		try {
 			await OnlyfoodzPosts.create({
@@ -268,7 +540,6 @@ class OnlyfoodzPosts extends Model implements OnlyfoodzPost {
 				caption: caption,
 				image: image,
 				plugins: plugins,
-				type: type,
 				createdat: new Date(),
 				postid: crypto.randomUUID(),
 				upvotes: [],
@@ -313,14 +584,10 @@ class OnlyfoodzPosts extends Model implements OnlyfoodzPost {
 
 				return data;
 			} else {
-				return {
-					error: "The specified post id is invalid.",
-				};
+				return null;
 			}
 		} else {
-			return {
-				error: "The specified post id is invalid.",
-			};
+			return null;
 		}
 	}
 
@@ -362,12 +629,10 @@ class OnlyfoodzPosts extends Model implements OnlyfoodzPost {
 		return posts;
 	}
 
-	static async listAllPosts(type: string): Promise<object[]> {
+	static async listAllPosts(): Promise<object[]> {
 		let posts: object[] = [];
 
-		const docs = await OnlyfoodzPosts.findAll({
-			type: type,
-		});
+		const docs = await OnlyfoodzPosts.findAll();
 
 		for (let post of docs) {
 			let Comments: OnlyfoodzPost["comments"] = [];
@@ -411,14 +676,11 @@ class OnlyfoodzPosts extends Model implements OnlyfoodzPost {
 		}
 	}
 
-	static async getAllUserPosts(
-		UserID: string,
-		Type: string
-	): Promise<OnlyfoodzPost[]> {
+	static async getAllUserPosts(UserID: string): Promise<OnlyfoodzPost[]> {
 		let posts: OnlyfoodzPost[] = [];
 
 		const docs = await OnlyfoodzPosts.findAll({
-			where: { userid: UserID, type: Type },
+			where: { userid: UserID },
 		});
 
 		for (let post of docs) {
@@ -483,7 +745,7 @@ class OnlyfoodzPosts extends Model implements OnlyfoodzPost {
 	): Promise<boolean | Error> {
 		try {
 			let post = await OnlyfoodzPosts.get(PostID);
-			post.post.downvotes.append(UserID);
+			post.post.downvotes.push(UserID);
 
 			const result = await OnlyfoodzPosts.updatePost(PostID, {
 				downvotes: post.post.downvotes,
@@ -495,16 +757,16 @@ class OnlyfoodzPosts extends Model implements OnlyfoodzPost {
 	}
 
 	static async comment(
-		Post: OnlyfoodzPost,
+		PostID: string,
 		User: User,
 		Caption: string,
 		Image: string
 	): Promise<boolean | Error> {
 		try {
-			const post = await OnlyfoodzPosts.get(Post.postid);
+			let post = await OnlyfoodzPosts.get(PostID);
 
 			if (post) {
-				post.comments.push({
+				post.post.comments.push({
 					user: User,
 					comment: {
 						caption: Caption,
@@ -512,8 +774,8 @@ class OnlyfoodzPosts extends Model implements OnlyfoodzPost {
 					},
 				});
 
-				const result = await OnlyfoodzPosts.updatePost(Post.postid, {
-					comments: post.comments,
+				const result = await OnlyfoodzPosts.updatePost(PostID, {
+					comments: post.post.comments,
 				});
 				return result;
 			} else return false;
@@ -523,12 +785,117 @@ class OnlyfoodzPosts extends Model implements OnlyfoodzPost {
 	}
 }
 
+// Developer Applications
+@Table({
+	tableName: "applications",
+})
+class Applications extends Model implements Application {
+	id: number;
+	creatorid: string;
+	name: string;
+	logo: string;
+	token: string;
+	active: boolean;
+	permissions: string[];
+	createdat: Date;
+
+	static async createApp(
+		creator_id: string,
+		name: string,
+		logo: string
+	): Promise<string | Error> {
+		try {
+			const token: string = crypto
+				.createHash("sha256")
+				.update(
+					`${crypto.randomUUID()}_${crypto.randomUUID()}`.replace(
+						/-/g,
+						""
+					)
+				)
+				.digest("hex");
+
+			await Applications.create({
+				creatorid: creator_id,
+				name: name,
+				logo: logo,
+				token: token,
+				active: true,
+				permissions: ["global.*"],
+				createdat: new Date(),
+			});
+
+			return token;
+		} catch (err) {
+			return err;
+		}
+	}
+
+	static async updateApp(token: string, data: any): Promise<boolean | Error> {
+		try {
+			await Applications.update(data, {
+				where: {
+					token: token,
+				},
+			});
+
+			return true;
+		} catch (err) {
+			return err;
+		}
+	}
+
+	static async get(token: string): Promise<Application | null> {
+		const tokenData = await Applications.findOne({
+			where: {
+				token: token,
+			},
+		});
+
+		if (tokenData) return tokenData;
+		else return null;
+	}
+
+	static async getAllApplications(
+		creatorid: string
+	): Promise<Application[] | Error> {
+		try {
+			const doc = await Applications.findAll({
+				where: {
+					creatorid: creatorid,
+				},
+			});
+
+			return doc;
+		} catch (error) {
+			return error;
+		}
+	}
+
+	static async delete(data: any): Promise<boolean | Error> {
+		try {
+			await Applications.destroy({
+				where: data,
+			});
+
+			return true;
+		} catch (err) {
+			return err;
+		}
+	}
+}
+
 const init = () => {
-	sequelize.addModels([Users, OnlyfoodzPosts]);
+	sequelize.addModels([Users, Posts, OnlyfoodzPosts, Applications]);
 
 	Users.init(schemaData["users"].schema, {
 		sequelize: sequelize,
 		modelName: schemaData["users"].name,
+	});
+
+	Posts.init(schemaData["posts"].schema, {
+		sequelize: sequelize,
+		modelName: schemaData["posts"].name,
 	});
 
 	OnlyfoodzPosts.init(schemaData["onlyfoodz_posts"].schema, {
@@ -536,9 +903,18 @@ const init = () => {
 		modelName: schemaData["onlyfoodz_posts"].name,
 	});
 
-	sequelize.sync();
+	Applications.init(schemaData["applications"].schema, {
+		sequelize: sequelize,
+		modelName: schemaData["applications"].name,
+	});
+
+	sequelize.sync({
+		alter: {
+			drop: false,
+		},
+	});
 };
 setTimeout(() => init(), 2000);
 
 // Export the classes
-export { Users, OnlyfoodzPosts };
+export { Users, Posts, OnlyfoodzPosts, Applications };
