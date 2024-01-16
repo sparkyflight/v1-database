@@ -28,7 +28,7 @@ sequelize
 
 // Schemas
 const schemaFiles = fs
-	.readdirSync("./dist/database/schemas")
+	.readdirSync("./dist/v1-database/schemas")
 	.filter((file) => file.endsWith(".js"));
 let schemaData = [];
 
@@ -914,7 +914,7 @@ const init = () => {
 		},
 	});
 };
-setTimeout(() => init(), 2000);
+setTimeout(() => init(), 3000);
 
 // Export the classes
 export { Users, Posts, OnlyfoodzPosts, Applications };
